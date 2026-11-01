@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>出题器自检 · 数学大冒险</title>
+  <style>
+    body { font-family: monospace; background: #fffdf5; color: #20202e; margin: 24px; }
+    h1 { font-size: 20px; }
+    table { border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #ccc; padding: 4px 10px; font-size: 13px; }
+    .ok { color: #1f7a35; }
+    .bad { color: #a52a24; font-weight: bold; }
+    #summary { margin-top: 16px; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <h1>出题器自检</h1>
+  <p>每个知识点生成 1000 道题，校验选项、答案、负数、超纲与解析。</p>
+  <div id="summary">正在运行…</div>
+  <table id="report">
+    <thead><tr><th>单元</th><th>知识点</th><th>生成</th><th>失败</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <script src="../js/namespace.js"></script>
+  <script src="../data/curriculum.js"></script>
+  <script src="../data/generators/g4a.js"></script>
+  <script src="../data/generators/g4b.js"></script>
+  <script src="../data/generators/challenge.js"></script>
+  <script src="selfcheck.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      var MG = window.MG;
+      var dataErrors = MG.data.validate();
+      var tbody = document.querySelector('#report tbody');
+      var rows = [];
+
+      var result = MG.selfcheck.run({
+        perTopic: 1000,
+        onTopic: function (t) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td>' + t.unitId + '</td><td>' + t.name + '</td><td>' + t.count + '</td>' +
+            '<td class="' + (t.failures ? 'bad' : 'ok') + '">' + t.failures + '</td>';
+          tbody.appendChild(tr);
+        }
+      });
+
+      var summary = document.querySelector('#summary');
+      var dataOk = dataErrors.length === 0;
+      summary.innerHTML =
+        '数据结构：<span class="' + (dataOk ? 'ok' : 'bad') + '">' +
+        (dataOk ? '通过' : dataErrors.join('；')) + '</span><br>' +
+        '知识点：' + result.topics + ' 个，生成题目：' + result.total +
+        ' 道，失败：<span class="' + (result.failures.length ? 'bad' : 'ok') + '">' +
+        result.failures.length + '</span>';
+    })();
+  </script>
+</body>
+</html>
