@@ -134,14 +134,23 @@
   extend('g4a.u1.compare', function (level) {
     var baseN = U.randInt(1000000, 9999000) * 10;
     var vals = [baseN + 1, baseN + 10, baseN + 100, baseN + 1000];
-    var askMax = U.randInt(0, 1) === 0;
-    var correct = askMax ? Math.max.apply(null, vals) : Math.min.apply(null, vals);
+    var sorted = vals.slice().sort(function (a, b) { return b - a; });
+    var mode = U.pick(['max', 'min', 'secondMax', 'secondMin']);
+    var correct = mode === 'max' ? sorted[0] :
+      mode === 'min' ? sorted[3] :
+        mode === 'secondMax' ? sorted[1] : sorted[2];
+    var prompt = mode === 'max' ? U.pick(['下面各数中，最大的是：', '下面四个数中，最大的是：']) :
+      mode === 'min' ? U.pick(['下面各数中，最小的是：', '下面四个数中，最小的是：']) :
+        mode === 'secondMax' ? U.pick(['按从大到小排列，排在第二的是：', '下面各数中，第二大的是：']) :
+          U.pick(['按从小到大排列，排在第二的是：', '下面各数中，第二小的是：']);
     return q({
       topicId: 'g4a.u1.compare', level: level,
-      prompt: '下面各数中，' + (askMax ? '最大' : '最小') + '的是：',
+      prompt: prompt,
       correct: String(correct),
       wrongs: three(String(correct), vals.filter(function (v) { return v !== correct; })),
-      explain: '四个数的前几位都相同，要从高位往低位逐位比较，' + (askMax ? '最大' : '最小') + '的是 ' + correct + '。'
+      explain: '四个数的前几位都相同，要从高位往低位逐位比较，' +
+        (mode === 'max' ? '最大' : mode === 'min' ? '最小' : mode === 'secondMax' ? '第二大' : '第二小') +
+        '的是 ' + correct + '。'
     });
   });
 
@@ -209,7 +218,15 @@
       ['用一副三角尺，可以拼出下面哪个角？', '105°', ['95°', '125°', '155°'],
         '三角尺上有 45° 和 60°，45° + 60° = 105°。'],
       ['一个角是 89°，这个角是（ ）', '锐角', ['直角', '钝角', '平角'],
-        '小于 90° 的角是锐角，89° 比 90° 小 1°。']
+        '小于 90° 的角是锐角，89° 比 90° 小 1°。'],
+      ['一个 91° 的角比直角大，它是（ ）', '钝角', ['锐角', '直角', '平角'],
+        '91° 大于 90° 且小于 180°，所以是钝角。'],
+      ['180° 的角叫做（ ）', '平角', ['直角', '钝角', '周角'],
+        '一条射线绕端点旋转半周，形成的角是平角，平角是 180°。'],
+      ['90° 的角叫做（ ）', '直角', ['锐角', '钝角', '平角'],
+        '90° 的角是直角。'],
+      ['一个角比直角小，它可能是（ ）', '锐角', ['钝角', '平角', '周角'],
+        '比直角小的角是锐角。']
     ]);
   });
 
@@ -242,14 +259,20 @@
   extend('g4a.u3.protractor', function (level) {
     var deg = U.randInt(3, 33) * 5;
     if (deg === 90) deg = 85;
-    var diff = Math.abs(deg - 90);
+    var mode = U.randInt(0, 3);
+    var diff = mode === 0 || mode === 3 ? Math.abs(deg - 90) : 180 - deg;
+    var prompt = mode === 0 ? '这个角与直角相差（ ）度' :
+      mode === 1 ? '这个角比平角小（ ）度' :
+        mode === 2 ? '这个角再增加（ ）度就是平角' :
+          '这个角比直角' + (deg > 90 ? '大' : '小') + '（ ）度';
     return q({
       topicId: 'g4a.u3.protractor', level: level,
-      prompt: '下图量角器上这个角与直角相差（ ）度',
+      prompt: prompt,
       canvas: { kind: 'protractor', deg: deg },
       correct: diff,
-      wrongs: three(diff, [deg, 180 - deg, diff + 10, diff + 20]),
-      explain: '先读出这个角是 ' + deg + '°，它与 90° 相差 ' + diff + '°。'
+      wrongs: three(diff, [deg, 180 - deg, diff + 10, diff - 10, 90 - diff]),
+      explain: '先读出这个角是 ' + deg + '°，' +
+        (mode === 0 || mode === 3 ? '它与 90° 相差 ' + diff + '°。' : '它与 180° 相差 ' + diff + '°。')
     });
   });
 
@@ -411,7 +434,11 @@
       ['a ÷ b = 15……4，如果 a、b 同时乘 3，商是（ ），余数是（ ）', '15……12', ['45……4', '15……4', '45……12'],
         '商不变，余数乘 3：4 × 3 = 12。'],
       ['被除数和除数同时乘 5，商（ ），余数（ ）', '不变……乘 5', ['乘 5……不变', '不变……不变', '除以 5……乘 5'],
-        '被除数和除数同时乘相同的数，商不变，但余数会乘这个数。']
+        '被除数和除数同时乘相同的数，商不变，但余数会乘这个数。'],
+      ['在有余数的除法里，被除数和除数同时乘 4，余数会（ ）', '乘 4', ['不变', '除以 4', '乘 16'],
+        '商不变，余数随着被除数和除数一起乘 4。'],
+      ['在有余数的除法里，被除数和除数同时除以 3，余数会（ ）', '除以 3', ['不变', '乘 3', '除以 9'],
+        '商不变，余数随着被除数和除数一起除以 3。']
     ]);
   });
 
@@ -443,17 +470,54 @@
   /* ---------- 7.2 条形统计图：和平均数比较 ---------- */
   extend('g4a.u7.compare', function (level) {
     var cats = ['一月', '二月', '三月', '四月', '五月'];
-    var vals = cats.map(function () { return U.randInt(5, 50); });
+    var vals = [];
+    while (vals.length < cats.length) {
+      var v = U.randInt(5, 50);
+      if (vals.indexOf(v) === -1) vals.push(v);
+    }
     var sum = vals.reduce(function (a, b) { return a + b; }, 0);
     var mean = sum / 5;
-    var count = vals.filter(function (v) { return v < mean; }).length;
+    var below = vals.filter(function (v) { return v < mean; }).length;
+    var above = vals.filter(function (v) { return v > mean; }).length;
+    var max = Math.max.apply(null, vals);
+    var min = Math.min.apply(null, vals);
+    var maxIndex = vals.indexOf(max);
+    var mode = U.pick(['below', 'above', 'max', 'diff']);
+    var canvas = { kind: 'bar-chart', categories: cats, values: vals, unit: '人' };
+
+    if (mode === 'max') {
+      return q({
+        topicId: 'g4a.u7.compare', level: level,
+        prompt: U.pick(['哪个月的人数最多？', '人数最多的月份是：']),
+        canvas: canvas,
+        correct: cats[maxIndex],
+        wrongs: cats.filter(function (_, i) { return i !== maxIndex; }),
+        explain: '直条最高的 ' + cats[maxIndex] + ' 人数最多，是 ' + max + ' 人。'
+      });
+    }
+
+    if (mode === 'diff') {
+      return q({
+        topicId: 'g4a.u7.compare', level: level,
+        prompt: U.pick(['人数最多的月份比最少的月份多多少人？', '最多人数与最少人数相差多少？']),
+        canvas: canvas,
+        correct: max - min,
+        wrongs: three(max - min, [max, min, max + min, max - min + 1]),
+        explain: '最多 ' + max + ' 人，最少 ' + min + ' 人，相差 ' + (max - min) + ' 人。'
+      });
+    }
+
+    var count = mode === 'below' ? below : above;
     return q({
       topicId: 'g4a.u7.compare', level: level,
-      prompt: '根据统计图，低于平均数的月份有几个？',
-      canvas: { kind: 'bar-chart', categories: cats, values: vals, unit: '人' },
+      prompt: mode === 'below'
+        ? U.pick(['根据统计图，低于平均数的月份有几个？', '低于平均数的月份有多少个？'])
+        : U.pick(['根据统计图，高于平均数的月份有几个？', '高于平均数的月份有多少个？']),
+      canvas: canvas,
       correct: count,
       wrongs: three(count, [count + 1, count - 1, 5 - count, count + 2, 0, 5]),
-      explain: '总数 ' + sum + ' 人，平均数 ' + U.num(mean) + ' 人；低于平均数的有 ' + count + ' 个月。'
+      explain: '总数 ' + sum + ' 人，平均数 ' + U.num(mean) + ' 人；' +
+        (mode === 'below' ? '低于' : '高于') + '平均数的有 ' + count + ' 个月。'
     });
   });
 
@@ -578,23 +642,45 @@
       [a + ' × 0 + ' + b + ' ÷ ' + b + ' = （ ）', '1', ['0', String(a), String(b)],
         '先算乘除：' + a + ' × 0 = 0，' + b + ' ÷ ' + b + ' = 1；再相加 0 + 1 = 1。'],
       ['0 × ' + a + ' + 0 ÷ ' + a + ' = （ ）', '0', ['1', String(a), '无意义'],
-        '0 乘任何数得 0，0 除以非 0 的数也得 0，0 + 0 = 0。']
+        '0 乘任何数得 0，0 除以非 0 的数也得 0，0 + 0 = 0。'],
+      ['下面算式中，结果一定是 0 的是（ ）', '0 × ' + a, [a + ' ÷ ' + a, a + ' + 0', a + ' − 0'],
+        '0 乘任何数都得 0；其他三个算式的结果分别是 1、' + a + ' 和 ' + a + '。'],
+      ['下面算式中，没有意义的是（ ）', '5 ÷ 0', ['0 ÷ 5', '0 × 5', '5 + 0'],
+        '0 不能作除数，所以 5 ÷ 0 没有意义。']
     ]);
   });
 
-  /* ---------- 2.1 观察物体：从上面看 ---------- */
+  /* ---------- 2.1 观察物体：从不同方向看 ---------- */
+  function viewCount(cubes, direction) {
+    var seen = Object.create(null);
+    cubes.forEach(function (c) {
+      var key = direction === 'front' ? c.x + ',' + c.z :
+        direction === 'top' ? c.x + ',' + c.y : c.y + ',' + c.z;
+      seen[key] = true;
+    });
+    return Object.keys(seen).length;
+  }
+
   extend('g4b.u2.view', function (level) {
     var cubes = hardCubes(U.randInt(7, 9));
-    var seen = Object.create(null);
-    cubes.forEach(function (c) { seen[c.x + ',' + c.y] = true; });
-    var ans = Object.keys(seen).length;
+    var directions = [
+      { id: 'front', name: '正面', desc: '前后重叠的正方形只算一个' },
+      { id: 'top', name: '上面', desc: '上下重叠的正方形只算一个' },
+      { id: 'right', name: '右面', desc: '左右重叠的正方形只算一个' },
+      { id: 'left', name: '左面', desc: '左右重叠的正方形只算一个' }
+    ];
+    var d = U.pick(directions);
+    var ans = viewCount(cubes, d.id);
     return q({
       topicId: 'g4b.u2.view', level: level,
-      prompt: '由这些小正方体搭成的立体图形，从上面看能看到几个正方形？',
+      prompt: U.pick([
+        '由这些小正方体搭成的立体图形，从' + d.name + '看能看到几个正方形？',
+        '这个立体图形从' + d.name + '看，能看到几个小正方形？'
+      ]),
       canvas: { kind: 'blocks', cubes: cubes },
       correct: ans,
-      wrongs: three(ans, [cubes.length, ans + 1, ans - 1]),
-      explain: '从上面看时，上下重叠的正方形只算一个，共能看到 ' + ans + ' 个正方形。'
+      wrongs: three(ans, [cubes.length, cubes.length + 1, ans + 1, ans > 1 ? ans - 1 : ans + 2, ans + 2]),
+      explain: '从' + d.name + '看时，' + d.desc + '，共能看到 ' + ans + ' 个正方形。'
     });
   });
 
@@ -944,6 +1030,27 @@
   });
 
   /* ---------- 9.1 鸡兔同笼：大数或得分问题 ---------- */
+  function chickenPair(chickens, rabbits) {
+    return '鸡 ' + chickens + ' 只，兔 ' + rabbits + ' 只';
+  }
+  function chickenWrongs(chickens, rabbits) {
+    var correct = chickenPair(chickens, rabbits);
+    var seen = Object.create(null);
+    seen[correct] = true;
+    var out = [];
+    function add(c, r) {
+      if (c < 1 || r < 1) return;
+      var s = chickenPair(c, r);
+      if (seen[s] || out.length >= 3) return;
+      seen[s] = true;
+      out.push(s);
+    }
+    [[1, 0], [0, 1], [1, 1], [2, 0], [0, 2], [-1, 0], [0, -1], [2, 1], [1, 2]].forEach(function (d) {
+      add(chickens + d[0], rabbits + d[1]);
+    });
+    return out.slice(0, 3);
+  }
+
   extend('g4b.u9.chicken', function (level) {
     if (U.randInt(0, 1) === 0) {
       var heads = U.randInt(20, 40);
@@ -955,11 +1062,7 @@
         topicId: 'g4b.u9.chicken', level: level,
         prompt: '笼子里有鸡和兔共 ' + heads + ' 只，一共 ' + legs + ' 条腿。鸡和兔各有多少只？',
         correct: correct,
-        wrongs: three(correct, [
-          '鸡 ' + rabbits + ' 只，兔 ' + chickens + ' 只',
-          '鸡 ' + (chickens + 1) + ' 只，兔 ' + (rabbits - 1) + ' 只',
-          '鸡 ' + (chickens - 1) + ' 只，兔 ' + (rabbits + 1) + ' 只'
-        ]),
+        wrongs: chickenWrongs(chickens, rabbits),
         explain: '假设全是鸡，共有 ' + (heads * 2) + ' 条腿，比实际少 ' + (legs - heads * 2) +
           ' 条。每把一只鸡换成兔多 2 条腿，所以兔有 ' + rabbits + ' 只，鸡有 ' + chickens + ' 只。'
       });

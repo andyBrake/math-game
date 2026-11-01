@@ -10,6 +10,26 @@
     var it = U.pick(list);
     return q({ topicId: topicId, level: level, prompt: it[0], correct: it[1], wrongs: it[2], explain: it[3] });
   }
+  function chickenPair(chickens, rabbits) {
+    return '鸡 ' + chickens + ' 只，兔 ' + rabbits + ' 只';
+  }
+  function chickenWrongs(chickens, rabbits) {
+    var correct = chickenPair(chickens, rabbits);
+    var seen = Object.create(null);
+    seen[correct] = true;
+    var out = [];
+    function add(c, r) {
+      if (c < 1 || r < 1) return;
+      var s = chickenPair(c, r);
+      if (seen[s] || out.length >= 3) return;
+      seen[s] = true;
+      out.push(s);
+    }
+    [[1, 0], [0, 1], [1, 1], [2, 0], [0, 2], [-1, 0], [0, -1], [2, 1], [1, 2]].forEach(function (d) {
+      add(chickens + d[0], rabbits + d[1]);
+    });
+    return out.slice(0, 3);
+  }
   /* 以「分」为单位的整数转小数，避免浮点误差 */
   function fmtCents(c) {
     var sign = c < 0 ? '-' : '';
@@ -88,18 +108,36 @@
     });
     return cubes;
   }
+  function viewCount(cubes, direction) {
+    var seen = Object.create(null);
+    cubes.forEach(function (c) {
+      var key = direction === 'front' ? c.x + ',' + c.z :
+        direction === 'top' ? c.x + ',' + c.y : c.y + ',' + c.z;
+      seen[key] = true;
+    });
+    return Object.keys(seen).length;
+  }
+
   R('g4b.u2.view', function (level) {
     var cubes = makeCubes(level >= 3 ? U.randInt(5, 7) : U.randInt(4, 5));
-    var seen = Object.create(null);
-    cubes.forEach(function (c) { seen[c.x + ',' + c.z] = true; });
-    var ans = Object.keys(seen).length;
+    var directions = [
+      { id: 'front', name: '正面', desc: '前后重叠的正方形只算一个' },
+      { id: 'top', name: '上面', desc: '上下重叠的正方形只算一个' },
+      { id: 'right', name: '右面', desc: '左右重叠的正方形只算一个' },
+      { id: 'left', name: '左面', desc: '左右重叠的正方形只算一个' }
+    ];
+    var d = U.pick(directions);
+    var ans = viewCount(cubes, d.id);
     return q({
       topicId: 'g4b.u2.view', level: level,
-      prompt: '由这些小正方体搭成的立体图形，从正面看能看到几个正方形？',
+      prompt: U.pick([
+        '由这些小正方体搭成的立体图形，从' + d.name + '看能看到几个正方形？',
+        '这个立体图形从' + d.name + '看，能看到几个小正方形？'
+      ]),
       canvas: { kind: 'blocks', cubes: cubes },
       correct: ans,
-      wrongs: [cubes.length, ans + 1, ans - 1],
-      explain: '从正面看时，前后重叠的正方形只算一个，共能看到 ' + ans + ' 个正方形。'
+      wrongs: [cubes.length, cubes.length + 1, ans + 1, ans > 1 ? ans - 1 : ans + 2, ans + 2],
+      explain: '从' + d.name + '看时，' + d.desc + '，共能看到 ' + ans + ' 个正方形。'
     });
   });
 
@@ -108,10 +146,15 @@
     var cubes = makeCubes(level >= 3 ? U.randInt(5, 8) : U.randInt(3, 5));
     return q({
       topicId: 'g4b.u2.count', level: level,
-      prompt: '这个立体图形由多少个小正方体搭成？',
+      prompt: U.pick([
+        '这个立体图形由多少个小正方体搭成？',
+        '这个立体图形由几个小正方体组成？',
+        '数一数，这个立体图形一共用了多少个小正方体？',
+        '这个立体图形里一共有多少个小正方体？'
+      ]),
       canvas: { kind: 'blocks', cubes: cubes },
       correct: cubes.length,
-      wrongs: [cubes.length + 1, cubes.length - 1, cubes.length + 2],
+      wrongs: [cubes.length + 1, cubes.length - 1, cubes.length + 2, cubes.length - 2, cubes.length + 3],
       explain: '按层数数：先数最下面一层，再数上面被挡住的小正方体，一共 ' + cubes.length + ' 个。'
     });
   });
@@ -191,13 +234,18 @@
   R('g4b.u4.compare', function (level) {
     if (level === 1) {
       var intPart = U.randInt(1, 9);
-      var s = intPart + '.' + U.randInt(1, 9) + U.pick(['00', '0', '']);
+      var s = intPart + '.' + U.randInt(1, 9) + U.pick(['00', '0']);
       var trimmed = String(Number(s));
       return q({
         topicId: 'g4b.u4.compare', level: level,
-        prompt: '把 ' + s + ' 化简后是：',
+        prompt: U.pick([
+          '把 ' + s + ' 化简后是：',
+          s + ' 去掉小数末尾的 0 后是：',
+          '与 ' + s + ' 大小相等，但写法更简单的是：',
+          s + ' 化简后的结果是多少？'
+        ]),
         correct: trimmed,
-        wrongs: [trimmed + '0', trimmed + '.0', String(Number(s) * 10)],
+        wrongs: [s, String(Number(s) * 10), trimmed + '0', String(Number(s) / 10)],
         explain: '小数的末尾添上 0 或去掉 0，小数的大小不变，所以 ' + s + ' = ' + trimmed + '。'
       });
     }
@@ -206,13 +254,23 @@
       var v = U.randInt(1, 9999) / 100;
       if (set.indexOf(v) === -1) set.push(v);
     }
-    var max = Math.max.apply(null, set);
+    var sorted = set.slice().sort(function (a, b) { return b - a; });
+    var mode = U.pick(['max', 'min', 'secondMax', 'secondMin']);
+    var val = mode === 'max' ? sorted[0] :
+      mode === 'min' ? sorted[3] :
+        mode === 'secondMax' ? sorted[1] : sorted[2];
+    var prompt = mode === 'max' ? U.pick(['下面各数中，最大的是：', '下面四个小数中，最大的是：']) :
+      mode === 'min' ? U.pick(['下面各数中，最小的是：', '下面四个小数中，最小的是：']) :
+        mode === 'secondMax' ? U.pick(['按从大到小排列，排在第二的是：', '下面各数中，第二大的是：']) :
+          U.pick(['按从小到大排列，排在第二的是：', '下面各数中，第二小的是：']);
     return q({
       topicId: 'g4b.u4.compare', level: level,
-      prompt: '下面各数中，最大的是：',
-      correct: fmtCents(Math.round(max * 100)),
-      wrongs: set.filter(function (v) { return v !== max; }).map(function (v) { return fmtCents(Math.round(v * 100)); }),
-      explain: '比较小数时先比整数部分，整数部分相同再比十分位、百分位……'
+      prompt: prompt,
+      correct: fmtCents(Math.round(val * 100)),
+      wrongs: set.filter(function (x) { return x !== val; }).map(function (x) { return fmtCents(Math.round(x * 100)); }),
+      explain: '比较小数时先比整数部分，整数部分相同再比十分位、百分位……' +
+        (mode === 'max' ? '最大' : mode === 'min' ? '最小' : mode === 'secondMax' ? '第二大' : '第二小') +
+        '的是 ' + fmtCents(Math.round(val * 100)) + '。'
     });
   });
 
@@ -286,7 +344,12 @@
     var goodStr = options.filter(function (o) { return o.ok; })[0].v;
     return q({
       topicId: 'g4b.u5.side', level: level,
-      prompt: '下面哪一组小棒能围成一个三角形？',
+      prompt: U.pick([
+        '下面哪一组小棒能围成一个三角形？',
+        '下面三根小棒的长度中，能围成三角形的是哪一组？',
+        '哪一组小棒可以首尾相接围成三角形？',
+        '根据三角形三边关系，下面哪组小棒能围成三角形？'
+      ]),
       correct: goodStr,
       wrongs: options.filter(function (o) { return !o.ok; }).map(function (o) { return o.v; }),
       explain: '三角形任意两边之和大于第三边。' + setStr(good) + ' 中 ' + a + ' + ' + b + ' > ' + c + '，可以围成三角形。'
@@ -346,10 +409,15 @@
     var need = filled.length;
     return q({
       topicId: 'g4b.u7.symmetry', level: level,
-      prompt: '虚线是对称轴。要把左半边补成轴对称图形，右边还需要涂几个小正方形？',
+      prompt: U.pick([
+        '虚线是对称轴。要把左半边补成轴对称图形，右边还需要涂几个小正方形？',
+        '下面的图形要补成轴对称图形，右边还需要涂几格？',
+        '以虚线为对称轴，右半边还要涂多少个小正方形？',
+        '观察对称轴，右边还需要补几个小正方形才能对称？'
+      ]),
       canvas: { kind: 'symmetry', cols: cols, rows: rows, axis: axis, filled: filled },
       correct: need,
-      wrongs: [need + 1, need - 1, filled.length],
+      wrongs: [need + 1, need - 1, need + 2, filled.length + 1],
       explain: '对称点到对称轴的距离相等，左半边有 ' + need + ' 个格子，右边就要补同样多的格子。'
     });
   });
@@ -362,13 +430,18 @@
     var endX = startX + steps;
     return q({
       topicId: 'g4b.u7.translate', level: level,
-      prompt: '下面的图形要向右平移几格，才能与虚线图形重合？',
+      prompt: U.pick([
+        '下面的图形要向右平移几格，才能与虚线图形重合？',
+        '图形向右平移多少格，才能和虚线图形重合？',
+        '数一数，下面的图形向右平移了几格？',
+        '虚线图形是平移后的位置，这个图形向右平移了几格？'
+      ]),
       canvas: {
         kind: 'translate', cols: 9, rows: 4,
         shape: shape, start: [startX, startY], end: [endX, startY]
       },
       correct: steps,
-      wrongs: [steps + 1, steps - 1, steps * 2],
+      wrongs: [steps + 1, steps - 1, steps * 2, steps + 2],
       explain: '找图形上一个对应的点，数一数它向右移动了几格，就是整个图形平移的格数：' + steps + ' 格。'
     });
   });
@@ -415,10 +488,15 @@
     var mean = sum / 5;
     return q({
       topicId: 'g4b.u8.chart', level: level,
-      prompt: '根据统计图，这 5 天平均每天有多少人？',
+      prompt: U.pick([
+        '根据统计图，这 5 天平均每天有多少人？',
+        '这 5 天平均每天有多少人？',
+        '根据统计图，平均每天有多少人？',
+        '把 5 天的数据平均，每天是多少人？'
+      ]),
       canvas: { kind: 'bar-chart', categories: cats, values: vals, unit: '人' },
       correct: mean,
-      wrongs: [mean + 1, mean - 1, Math.max.apply(null, vals)],
+      wrongs: [mean + 1, mean - 1, mean + 2, Math.max.apply(null, vals) + 1],
       explain: '先求总数 ' + sum + '，再除以 5，平均每天 ' + mean + ' 人。'
     });
   });
@@ -434,11 +512,7 @@
       topicId: 'g4b.u9.chicken', level: level,
       prompt: '笼子里有鸡和兔共 ' + heads + ' 只，一共 ' + legs + ' 条腿。鸡和兔各有多少只？',
       correct: ans,
-      wrongs: [
-        '鸡 ' + rabbits + ' 只，兔 ' + chickens + ' 只',
-        '鸡 ' + (chickens + 1) + ' 只，兔 ' + (rabbits - 1) + ' 只',
-        '鸡 ' + (chickens - 1) + ' 只，兔 ' + (rabbits + 1) + ' 只'
-      ],
+      wrongs: chickenWrongs(chickens, rabbits),
       explain: '假设全是鸡，共有 ' + heads * 2 + ' 条腿，比实际少 ' + (legs - heads * 2) +
         ' 条。每把一只鸡换成兔多 2 条腿，所以兔有 ' + rabbits + ' 只，鸡有 ' + chickens + ' 只。'
     });

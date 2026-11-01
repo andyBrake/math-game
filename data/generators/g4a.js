@@ -97,13 +97,31 @@
       var v = U.randInt(Math.pow(10, digits - 1), Math.pow(10, digits) - 1);
       if (set.indexOf(v) === -1) set.push(v);
     }
-    var max = Math.max.apply(null, set);
+    var sorted = set.slice().sort(function (a, b) { return b - a; });
+    var mode = U.pick(['max', 'min', 'secondMax', 'secondMin']);
+    var correct;
+    var prompt;
+    if (mode === 'max') {
+      correct = sorted[0];
+      prompt = U.pick(['下面各数中，最大的是：', '下面四个数中，最大的是：']);
+    } else if (mode === 'min') {
+      correct = sorted[3];
+      prompt = U.pick(['下面各数中，最小的是：', '下面四个数中，最小的是：']);
+    } else if (mode === 'secondMax') {
+      correct = sorted[1];
+      prompt = U.pick(['按从大到小排列，排在第二的是：', '下面各数中，第二大的是：']);
+    } else {
+      correct = sorted[2];
+      prompt = U.pick(['按从小到大排列，排在第二的是：', '下面各数中，第二小的是：']);
+    }
     return q({
       topicId: 'g4a.u1.compare', level: level,
-      prompt: '下面各数中，最大的是：',
-      correct: String(max),
-      wrongs: set.filter(function (v) { return v !== max; }),
-      explain: '位数相同时从最高位比起，最高位大的数就大；最高位相同再比下一位。'
+      prompt: prompt,
+      correct: String(correct),
+      wrongs: sorted.filter(function (v) { return v !== correct; }),
+      explain: '比较位数相同的数，要从最高位开始逐位比较；' +
+        (mode === 'max' ? '最大的是 ' : mode === 'min' ? '最小的是 ' :
+          mode === 'secondMax' ? '第二大的是 ' : '第二小的是 ') + correct + '。'
     });
   });
 
@@ -167,19 +185,67 @@
 
   /* ---------- 3.1 角的度量：分类 ---------- */
   R('g4a.u3.classify', function (level) {
-    var kind = U.pick(['锐角', '直角', '钝角', '平角']);
-    var deg;
-    if (kind === '直角') deg = 90;
-    else if (kind === '平角') deg = 180;
-    else if (kind === '锐角') deg = U.randInt(15, 85);
-    else deg = U.randInt(95, 175);
+    var types = ['锐角', '直角', '钝角', '平角', '周角'];
+    var mode = U.randInt(0, 5);
+    var kind, deg, prompt;
+    var rule = '小于 90° 是锐角，等于 90° 是直角，大于 90° 小于 180° 是钝角，等于 180° 是平角。';
+
+    if (mode <= 1) {
+      kind = U.pick(['锐角', '直角', '钝角', '平角']);
+      if (kind === '直角') deg = 90;
+      else if (kind === '平角') deg = 180;
+      else if (kind === '锐角') deg = U.randInt(15, 85);
+      else deg = U.randInt(95, 175);
+      prompt = mode === 0 ? '下图中这个角是：' : '观察这个角，它属于：';
+      return q({
+        topicId: 'g4a.u3.classify', level: level,
+        prompt: prompt,
+        canvas: { kind: 'angle', deg: deg },
+        correct: kind,
+        wrongs: wrongsFrom(kind, U.shuffle(types)),
+        explain: deg + '° 的角是' + kind + '。' + rule
+      });
+    }
+
+    if (mode === 2) {
+      kind = U.pick(['锐角', '直角', '钝角', '平角']);
+      if (kind === '直角') deg = 90;
+      else if (kind === '平角') deg = 180;
+      else if (kind === '锐角') deg = U.randInt(15, 85);
+      else deg = U.randInt(95, 175);
+      return q({
+        topicId: 'g4a.u3.classify', level: level,
+        prompt: U.pick(['一个角是 ' + deg + '°，它是：', '已知一个角是 ' + deg + '°，这个角属于：']),
+        correct: kind,
+        wrongs: wrongsFrom(kind, U.shuffle(types)),
+        explain: deg + '° 的角是' + kind + '。' + rule
+      });
+    }
+
+    if (mode === 3) {
+      return q({
+        topicId: 'g4a.u3.classify', level: level,
+        prompt: U.pick(['比直角大、比平角小的角叫做：', '大于 90° 且小于 180° 的角是：']),
+        correct: '钝角',
+        wrongs: wrongsFrom('钝角', U.shuffle(types)),
+        explain: '大于 90° 且小于 180° 的角叫钝角。' + rule
+      });
+    }
+
+    var ask = U.pick(['锐角', '直角', '钝角', '平角']);
+    if (ask === '锐角') deg = U.randInt(20, 80);
+    else if (ask === '直角') deg = 90;
+    else if (ask === '钝角') deg = U.randInt(100, 175);
+    else deg = 180;
+    var wrongDegs = ask === '锐角' ? [90, 120, 180] :
+      ask === '直角' ? [45, 120, 180] :
+        ask === '钝角' ? [45, 90, 180] : [45, 90, 120];
     return q({
       topicId: 'g4a.u3.classify', level: level,
-      prompt: '下图中这个角是：',
-      canvas: { kind: 'angle', deg: deg },
-      correct: kind,
-      wrongs: ['锐角', '直角', '钝角', '平角'].filter(function (x) { return x !== kind; }),
-      explain: deg + '° 的角是' + kind + '。小于 90° 是锐角，等于 90° 是直角，大于 90° 小于 180° 是钝角，等于 180° 是平角。'
+      prompt: U.pick(['下面各角中，哪个是' + ask + '？', '下面哪个角的度数是' + ask + '？']),
+      correct: deg + '°',
+      wrongs: wrongDegs.map(function (d) { return d + '°'; }),
+      explain: '小于 90° 是锐角，等于 90° 是直角，大于 90° 小于 180° 是钝角，等于 180° 是平角。'
     });
   });
 
@@ -206,12 +272,19 @@
   /* ---------- 3.3 角的度量：量角器读数（改为选择） ---------- */
   R('g4a.u3.protractor', function (level) {
     var deg = U.randInt(3, 33) * 5; // 15 ~ 165
+    var prompts = [
+      '下图量角器上这个角是多少度？',
+      '量角器上，这个角的度数是：',
+      '下图中，从 0° 刻度线到这个角是多少度？',
+      '观察量角器，这个角是：',
+      '量角器上这条边所指的刻度是：'
+    ];
     return q({
       topicId: 'g4a.u3.protractor', level: level,
-      prompt: '下图量角器上这个角是多少度？',
+      prompt: U.pick(prompts),
       canvas: { kind: 'protractor', deg: deg },
       correct: deg,
-      wrongs: [180 - deg, deg + 5, deg - 5, deg + 10],
+      wrongs: [180 - deg, deg + 5, deg - 5, deg + 10, deg - 10],
       explain: '量角时角的顶点对准中心点，一条边对准 0° 刻度线，另一条边所指的刻度就是角的度数，这里是 ' + deg + '°。'
     });
   });
@@ -351,7 +424,11 @@
   /* ---------- 7.1 条形统计图：读图 ---------- */
   function makeBars(count, maxVal) {
     var cats = ['一月', '二月', '三月', '四月', '五月', '六月'].slice(0, count);
-    var vals = cats.map(function () { return U.randInt(5, maxVal); });
+    var vals = [];
+    while (vals.length < count) {
+      var v = U.randInt(5, maxVal);
+      if (vals.indexOf(v) === -1) vals.push(v);
+    }
     return { cats: cats, vals: vals };
   }
 
@@ -376,24 +453,47 @@
     var d = makeBars(level >= 3 ? 5 : 4, 50);
     var max = Math.max.apply(null, d.vals);
     var min = Math.min.apply(null, d.vals);
-    var mode = U.pick(['max', 'diff']);
+    var sum = d.vals.reduce(function (a, b) { return a + b; }, 0);
+    var mode = U.pick(['max', 'min', 'diff', 'total']);
+    var mi = d.vals.indexOf(max);
+    var ni = d.vals.indexOf(min);
+    var canvas = { kind: 'bar-chart', categories: d.cats, values: d.vals, unit: '人' };
     if (mode === 'max') {
-      var mi = d.vals.indexOf(max);
       return q({
         topicId: 'g4a.u7.compare', level: level,
-        prompt: '哪个月的人数最多？',
-        canvas: { kind: 'bar-chart', categories: d.cats, values: d.vals, unit: '人' },
+        prompt: U.pick(['哪个月的人数最多？', '人数最多的月份是：']),
+        canvas: canvas,
         correct: d.cats[mi],
         wrongs: d.cats.filter(function (_, i) { return i !== mi; }),
         explain: '直条最高的 ' + d.cats[mi] + ' 人数最多，是 ' + max + ' 人。'
       });
     }
+    if (mode === 'min') {
+      return q({
+        topicId: 'g4a.u7.compare', level: level,
+        prompt: U.pick(['哪个月的人数最少？', '人数最少的月份是：']),
+        canvas: canvas,
+        correct: d.cats[ni],
+        wrongs: d.cats.filter(function (_, i) { return i !== ni; }),
+        explain: '直条最矮的 ' + d.cats[ni] + ' 人数最少，是 ' + min + ' 人。'
+      });
+    }
+    if (mode === 'total') {
+      return q({
+        topicId: 'g4a.u7.compare', level: level,
+        prompt: U.pick(['这几个月一共有多少人？', '把各月人数合起来，一共是多少人？']),
+        canvas: canvas,
+        correct: sum,
+        wrongs: [sum + 5, sum - 5, sum + 10, max],
+        explain: '把各月人数相加：' + d.vals.join(' + ') + ' = ' + sum + ' 人。'
+      });
+    }
     return q({
       topicId: 'g4a.u7.compare', level: level,
-      prompt: '人数最多的月份比最少的月份多多少人？',
-      canvas: { kind: 'bar-chart', categories: d.cats, values: d.vals, unit: '人' },
+      prompt: U.pick(['人数最多的月份比最少的月份多多少人？', '最多人数与最少人数相差多少？']),
+      canvas: canvas,
       correct: max - min,
-      wrongs: [max, min, max + min],
+      wrongs: [max, min, max + min, max - min + 1],
       explain: '最多 ' + max + ' 人，最少 ' + min + ' 人，相差 ' + max + ' − ' + min + ' = ' + (max - min) + ' 人。'
     });
   });
@@ -456,7 +556,15 @@
       ['田忌用「下对上、上对中、中对下」对阵齐王，最终结果是什么？',
         '田忌 2 胜 1 负获胜',
         ['田忌 3 场全胜', '田忌 1 胜 2 负失败', '田忌 3 场全负'],
-        '下等马输给上等马，上等马赢中等马，中等马赢下等马，所以田忌 2 胜 1 负。']
+        '下等马输给上等马，上等马赢中等马，中等马赢下等马，所以田忌 2 胜 1 负。'],
+      ['田忌赛马中，田忌取胜的关键是先用（ ）去输一场',
+        '下等马',
+        ['上等马', '中等马', '任意一匹'],
+        '用最弱的下等马去输给齐王最强的上等马，才能用上等马和中等马赢下另外两场。'],
+      ['如果田忌按上、中、下依次对齐王的上、中、下，结果会是（ ）',
+        '田忌 0 胜 3 负',
+        ['田忌 2 胜 1 负', '田忌 1 胜 2 负', '田忌 3 胜 0 负'],
+        '同等级的马田忌都弱一些，按同样顺序对阵会三场全输。']
     ];
     return concept('g4a.u8.horse', level, list);
   });
