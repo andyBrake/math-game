@@ -1,4 +1,4 @@
-/* 教材数据：人教版小学数学。四年级上下册为已实现内容，其余年级仅占位。 */
+/* 教材数据：北师大版小学数学（2024 年审定）。四年级上下册为已实现内容，其余年级仅占位。 */
 (function (global) {
   'use strict';
   var MG = global.MG;
@@ -8,8 +8,8 @@
   }
 
   MG.data.curriculum = {
-    version: 1,
-    edition: '人教版',
+    version: 2,
+    edition: '北师大版',
     grades: [
       { id: 'g1', name: '一年级', status: 'todo', semesters: [] },
       { id: 'g2', name: '二年级', status: 'todo', semesters: [] },
@@ -24,66 +24,82 @@
             name: '上册',
             units: [
               {
-                id: 'g4a-u1', name: '大数的认识', order: 1, hasGraphics: false,
+                id: 'g4a-u1', name: '认识更大的数', order: 1, hasGraphics: false,
                 topics: [
-                  t('g4a.u1.read', '亿以内数的读法'),
-                  t('g4a.u1.write', '亿以内数的写法'),
-                  t('g4a.u1.compare', '数的大小比较'),
-                  t('g4a.u1.round', '改写与近似数')
+                  t('g4a.u1.table', '十进制数位顺序表'),
+                  t('g4a.u1.read', '大数的读法'),
+                  t('g4a.u1.write', '大数的写法'),
+                  t('g4a.u1.compare', '大数的大小比较'),
+                  t('g4a.u1.convert', '改写成以"万""亿"为单位的数'),
+                  t('g4a.u1.round', '近似数（四舍五入）'),
+                  t('g4a.u1.code', '编码（综合实践）')
                 ]
               },
               {
-                id: 'g4a-u2', name: '公顷和平方千米', order: 2, hasGraphics: false,
+                id: 'g4a-u2', name: '线与角', order: 2, hasGraphics: true,
                 topics: [
-                  t('g4a.u2.convert', '面积单位换算'),
-                  t('g4a.u2.unit', '选择合适的面积单位')
+                  t('g4a.u2.line', '线段、射线与直线'),
+                  t('g4a.u2.vertical', '相交与垂直'),
+                  t('g4a.u2.parallel', '平移与平行'),
+                  t('g4a.u2.classify', '角的分类'),
+                  t('g4a.u2.protractor', '角的度量'),
+                  t('g4a.u2.draw', '画角')
                 ]
               },
               {
-                id: 'g4a-u3', name: '角的度量', order: 3, hasGraphics: true,
+                id: 'g4a-u3', name: '整数乘法（二）', order: 3, hasGraphics: false,
                 topics: [
-                  t('g4a.u3.classify', '角的分类'),
-                  t('g4a.u3.sum', '角的度数计算'),
-                  t('g4a.u3.protractor', '量角器读数')
+                  t('g4a.u3.zero', '整十整百数的乘法'),
+                  t('g4a.u3.mul2', '两位数乘两位数'),
+                  t('g4a.u3.mul3', '三位数乘两位数'),
+                  t('g4a.u3.est', '乘法的估算'),
+                  t('g4a.u3.rule', '有趣的算式')
                 ]
               },
               {
-                id: 'g4a-u4', name: '三位数乘两位数', order: 4, hasGraphics: false,
+                id: 'g4a-u4', name: '我们生活的空间（二）', order: 4, hasGraphics: false,
                 topics: [
-                  t('g4a.u4.mul', '三位数乘两位数笔算'),
-                  t('g4a.u4.rule', '积的变化规律'),
-                  t('g4a.u4.word', '单价与速度问题')
+                  t('g4a.u4.range', '观察的范围'),
+                  t('g4a.u4.view', '从不同位置观察')
                 ]
               },
               {
-                id: 'g4a-u5', name: '平行四边形和梯形', order: 5, hasGraphics: false,
+                id: 'g4a-u5', name: '运算律', order: 5, hasGraphics: false,
                 topics: [
-                  t('g4a.u5.parallel', '垂直与平行'),
-                  t('g4a.u5.shape', '平行四边形与梯形')
+                  t('g4a.u5.order', '混合运算顺序'),
+                  t('g4a.u5.bracket', '中括号'),
+                  t('g4a.u5.add', '加法交换律和结合律'),
+                  t('g4a.u5.sub', '减法性质'),
+                  t('g4a.u5.mul', '乘法交换律和结合律'),
+                  t('g4a.u5.dist', '乘法分配律'),
+                  t('g4a.u5.simplify', '简便计算'),
+                  t('g4a.u5.count', '数图形的学问')
                 ]
               },
               {
-                id: 'g4a-u6', name: '除数是两位数的除法', order: 6, hasGraphics: false,
+                id: 'g4a-u6', name: '图形的奥秘', order: 6, hasGraphics: true,
                 topics: [
-                  t('g4a.u6.estimate', '除法的估算'),
-                  t('g4a.u6.div', '除数是两位数的笔算'),
-                  t('g4a.u6.rule', '商的变化规律')
+                  t('g4a.u6.slice', '切开立体图形'),
+                  t('g4a.u6.blocks', '搭建立体大楼'),
+                  t('g4a.u6.roll', '翻滚正方体')
                 ]
               },
               {
-                id: 'g4a-u7', name: '条形统计图', order: 7, hasGraphics: true,
+                id: 'g4a-u7', name: '运用数量关系解决问题', order: 7, hasGraphics: false,
                 topics: [
-                  t('g4a.u7.read', '读条形统计图'),
-                  t('g4a.u7.compare', '统计图中的比较'),
-                  t('g4a.u7.draw', '确定直条的高度')
+                  t('g4a.u7.total', '总量与分量'),
+                  t('g4a.u7.price', '单价、数量与总价'),
+                  t('g4a.u7.speed', '速度、时间与路程'),
+                  t('g4a.u7.meet', '相遇问题')
                 ]
               },
               {
-                id: 'g4a-u8', name: '数学广角——优化', order: 8, hasGraphics: false,
+                id: 'g4a-u8', name: '数据的表示和分析（一）', order: 8, hasGraphics: true,
                 topics: [
-                  t('g4a.u8.tea', '沏茶问题'),
-                  t('g4a.u8.pancake', '烙饼问题'),
-                  t('g4a.u8.horse', '田忌赛马')
+                  t('g4a.u8.read', '读条形统计图'),
+                  t('g4a.u8.compare', '统计图中的比较'),
+                  t('g4a.u8.scale', '1格表示多少'),
+                  t('g4a.u8.group', '数据的分段整理')
                 ]
               }
             ]
@@ -93,69 +109,60 @@
             name: '下册',
             units: [
               {
-                id: 'g4b-u1', name: '四则运算', order: 1, hasGraphics: false,
+                id: 'g4b-u1', name: '小数的意义和加减法', order: 1, hasGraphics: false,
                 topics: [
-                  t('g4b.u1.order', '运算顺序'),
-                  t('g4b.u1.calc', '含括号的混合运算'),
-                  t('g4b.u1.zero', '关于 0 的运算')
+                  t('g4b.u1.meaning', '小数的意义'),
+                  t('g4b.u1.unit', '小数与单位换算'),
+                  t('g4b.u1.zero', '小数的性质'),
+                  t('g4b.u1.compare', '小数的大小比较'),
+                  t('g4b.u1.calc', '小数加减法'),
+                  t('g4b.u1.mix', '小数加减混合运算')
                 ]
               },
               {
-                id: 'g4b-u2', name: '观察物体（二）', order: 2, hasGraphics: true,
+                id: 'g4b-u2', name: '认识三角形和四边形', order: 2, hasGraphics: false,
                 topics: [
-                  t('g4b.u2.view', '从不同方向观察'),
-                  t('g4b.u2.count', '数小正方体的个数')
+                  t('g4b.u2.classify', '三角形的分类'),
+                  t('g4b.u2.sum', '三角形的内角和'),
+                  t('g4b.u2.side', '三角形三边关系'),
+                  t('g4b.u2.quad', '四边形的分类'),
+                  t('g4b.u2.stable', '图形的稳定性')
                 ]
               },
               {
-                id: 'g4b-u3', name: '运算定律', order: 3, hasGraphics: false,
+                id: 'g4b-u3', name: '小数乘法', order: 3, hasGraphics: false,
                 topics: [
-                  t('g4b.u3.identify', '辨认运算定律'),
-                  t('g4b.u3.simplify', '简便计算')
+                  t('g4b.u3.int', '小数乘整数'),
+                  t('g4b.u3.point', '小数点移动'),
+                  t('g4b.u3.dec', '小数乘小数'),
+                  t('g4b.u3.simplify', '小数乘法简算')
                 ]
               },
               {
-                id: 'g4b-u4', name: '小数的意义和性质', order: 4, hasGraphics: false,
+                id: 'g4b-u4', name: '观察物体', order: 4, hasGraphics: true,
                 topics: [
-                  t('g4b.u4.point', '小数点移动'),
-                  t('g4b.u4.compare', '小数的大小比较与化简'),
-                  t('g4b.u4.unit', '小数单位换算'),
-                  t('g4b.u4.round', '小数的近似数')
+                  t('g4b.u4.view', '从不同方向观察'),
+                  t('g4b.u4.count', '数小正方体的个数')
                 ]
               },
               {
-                id: 'g4b-u5', name: '三角形', order: 5, hasGraphics: false,
+                id: 'g4b-u5', name: '认识方程', order: 5, hasGraphics: false,
                 topics: [
-                  t('g4b.u5.sum', '三角形的内角和'),
-                  t('g4b.u5.side', '三边关系'),
-                  t('g4b.u5.classify', '三角形的分类')
+                  t('g4b.u5.letter', '字母表示数'),
+                  t('g4b.u5.relation', '等量关系'),
+                  t('g4b.u5.equation', '认识方程'),
+                  t('g4b.u5.solve1', '解方程（加减型）'),
+                  t('g4b.u5.solve2', '解方程（乘除型）'),
+                  t('g4b.u5.word', '列方程解决问题'),
+                  t('g4b.u5.tess', '密铺（数学好玩）')
                 ]
               },
               {
-                id: 'g4b-u6', name: '小数的加法和减法', order: 6, hasGraphics: false,
+                id: 'g4b-u6', name: '数据的表示和分析', order: 6, hasGraphics: true,
                 topics: [
-                  t('g4b.u6.calc', '小数加减法笔算'),
-                  t('g4b.u6.simplify', '小数加减简便计算')
-                ]
-              },
-              {
-                id: 'g4b-u7', name: '图形的运动（二）', order: 7, hasGraphics: true,
-                topics: [
-                  t('g4b.u7.symmetry', '轴对称图形'),
-                  t('g4b.u7.translate', '平移')
-                ]
-              },
-              {
-                id: 'g4b-u8', name: '平均数与条形统计图', order: 8, hasGraphics: true,
-                topics: [
-                  t('g4b.u8.mean', '求平均数'),
-                  t('g4b.u8.chart', '统计图中的平均数')
-                ]
-              },
-              {
-                id: 'g4b-u9', name: '数学广角——鸡兔同笼', order: 9, hasGraphics: false,
-                topics: [
-                  t('g4b.u9.chicken', '鸡兔同笼')
+                  t('g4b.u6.bar', '读条形统计图'),
+                  t('g4b.u6.line', '读折线统计图'),
+                  t('g4b.u6.mean', '求平均数')
                 ]
               }
             ]

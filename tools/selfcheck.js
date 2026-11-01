@@ -81,12 +81,14 @@ if (typeof module !== 'undefined' && require.main === module) {
   console.log('数据校验: ' + (dataErrs.length ? '失败\n  - ' + dataErrs.join('\n  - ') : '通过'));
 
   var missing = [];
+  var totalTopics = 0;
   MGn.data.allUnits().forEach(function (unit) {
     unit.topics.forEach(function (topic) {
+      totalTopics++;
       if (!MGn.challengeIds || MGn.challengeIds.indexOf(topic.gen) === -1) missing.push(topic.gen);
     });
   });
-  console.log('挑战题覆盖: ' + (missing.length ? '缺少 ' + missing.join(', ') : '44/44 全覆盖'));
+  console.log('挑战题覆盖: ' + (missing.length ? '缺少 ' + missing.join(', ') : totalTopics + '/' + totalTopics + ' 全覆盖'));
   if (missing.length) process.exitCode = 1;
 
   var perTopic = Number(process.argv[2] || 1000);

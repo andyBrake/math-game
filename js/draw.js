@@ -271,8 +271,102 @@
     });
   }
 
+  /* ---------- 折线统计图 ---------- */
+  function lineChart(ctx, w, h, d) {
+    var padL = 34, padB = 26, padT = 18, padR = 12;
+    var plotW = w - padL - padR, plotH = h - padT - padB;
+    var values = d.values || [];
+    var categories = d.categories || [];
+    var max = Math.max.apply(null, values.concat([1]));
+    var min = Math.min.apply(null, values.concat([0]));
+    if (min > 0) min = 0;
+    var range = max - min || 1;
+    var step = Math.ceil(range / 5 / 5) * 5 || 5;
+    var top = min + step * Math.ceil(range / step);
+    var bottom = min - (top - min) % step;
+    if (bottom < 0) bottom = 0;
+
+    ctx.fillStyle = PAPER;
+    ctx.fillRect(0, 0, w, h);
+
+    /* 纵轴网格线 + 刻度 */
+    ctx.strokeStyle = '#d8d2c0';
+    ctx.fillStyle = '#6b6b7a';
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (var g = 0; g <= 5; g++) {
+      var val = bottom + ((top - bottom) / 5) * (5 - g);
+      var y = padT + (plotH / 5) * g;
+      ctx.beginPath();
+      ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y);
+      ctx.stroke();
+      ctx.fillText(String(Math.round(val)), padL - 5, y);
+    }
+
+    /* 计算各点坐标 */
+    var n = values.length;
+    var slot = plotW / Math.max(1, n - 1);
+    var pts = [];
+    for (var i = 0; i < n; i++) {
+      var x = n === 1 ? padL + plotW / 2 : padL + slot * i;
+      var y = padT + plotH - ((values[i] - bottom) / (top - bottom)) * plotH;
+      pts.push({ x: x, y: y, v: values[i] });
+    }
+
+    /* 折线 */
+    ctx.strokeStyle = BLUE;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    pts.forEach(function (p, i) {
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.stroke();
+
+    /* 数据点 + 数值标注 */
+    pts.forEach(function (p) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = BLUE;
+      ctx.fill();
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.fillStyle = INK;
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(String(p.v), p.x, p.y - 6);
+
+      /* 横轴类目名 */
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = '#6b6b7a';
+      ctx.font = '10px monospace';
+      var cat = categories[pts.indexOf(p)] || '';
+      if (n <= 6) {
+        ctx.fillText(cat, p.x, padT + plotH + 5);
+      } else {
+        /* 点数多时隔一个标注 */
+        if (pts.indexOf(p) % 2 === 0 || pts.indexOf(p) === n - 1) {
+          ctx.fillText(cat, p.x, padT + plotH + 5);
+        }
+      }
+    });
+
+    /* 坐标轴 */
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH);
+    ctx.stroke();
+  }
+
   var painters = {
     'bar-chart': function (ctx, w, h, d) { barChart(ctx, w, h, d); },
+    'line-chart': function (ctx, w, h, d) { lineChart(ctx, w, h, d); },
     angle: function (ctx, w, h, d) { drawAngle(ctx, w, h, d.deg, false); },
     protractor: function (ctx, w, h, d) { drawAngle(ctx, w, h, d.deg, true); },
     symmetry: function (ctx, w, h, d) { symmetry(ctx, w, h, d); },
