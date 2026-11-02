@@ -43,6 +43,18 @@
 
     click: [
       { f: 880, d: 0.03 }
+    ],
+
+    /* 普通敌人爆炸：开头一声短噪声「啪」，接低频下坠的轰鸣尾音，总约 0.6s */
+    boom: [
+      { noise: true, d: 0.20, vol: 0.18, filterHz: 1200 },
+      { f: 150, d: 0.40, type: 'sawtooth', vol: 0.14, slide: 50 }
+    ],
+
+    /* BOSS 爆炸：更低更沉更长，噪声更响更长，低频下坠到 45Hz，总约 0.95s */
+    'boom-boss': [
+      { noise: true, d: 0.35, vol: 0.22, filterHz: 900 },
+      { f: 110, d: 0.60, type: 'sawtooth', vol: 0.16, slide: 45 }
     ]
   };
 
@@ -80,6 +92,11 @@
     },
 
     tone: function (note, startAt) {
+      /* 噪声音符走独立分支，由 pattern 编排进同一时间线 */
+      if (note.noise) {
+        this.noise(note, startAt);
+        return;
+      }
       var ctx = this.ensure();
       if (!ctx) return;
       var t0 = ctx.currentTime + (startAt || 0);
@@ -114,6 +131,42 @@
 
       osc.start(t0);
       osc.stop(t0 + duration + 0.02);
+    },
+
+    /* 白噪声爆点：AudioBuffer 填充随机采样，经低通滤波塑形后输出，
+       用于爆炸的「啪」那一下。无外部音频文件，纯 WebAudio 合成 */
+    noise: function (note, startAt) {
+      var ctx = this.ensure();
+      if (!ctx) return;
+      var t0 = ctx.currentTime + (startAt || 0);
+      var duration = note.d;
+      var vol = note.vol || 0.15;
+      var filterHz = note.filterHz || 1000;
+
+      var len = Math.max(1, Math.floor(ctx.sampleRate * duration));
+      var buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < len; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      var src = ctx.createBufferSource();
+      src.buffer = buf;
+
+      var filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = filterHz;
+
+      var gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(vol, t0 + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+
+      src.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      src.start(t0);
+      src.stop(t0 + duration + 0.02);
     },
 
     play: function (name) {

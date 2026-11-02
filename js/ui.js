@@ -40,6 +40,7 @@
     recorded: false,
     coinsEarned: 0,
     timer: null,
+    effectTimers: [],
     started: false,
 
     init: function () {
@@ -76,6 +77,17 @@
     go: function (hash) {
       if (location.hash === hash) this.route();
       else location.hash = hash;
+    },
+
+    /* 是否偏好减弱动态效果；每次实时读取 matchMedia，便于测试注入 */
+    prefersReduced: function () {
+      return !!(global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    },
+
+    /* 清理本功能新增的所有 setTimeout，避免重渲染/路由后残留回调操作旧 DOM */
+    clearEffects: function () {
+      this.effectTimers.forEach(clearTimeout);
+      this.effectTimers = [];
     },
 
     onClick: function (ev) {
@@ -288,6 +300,7 @@
     },
 
     route: function () {
+      this.clearEffects();
       if (this.timer) { clearInterval(this.timer); this.timer = null; }
       if (MG.music) MG.music.stop();
       try {
@@ -479,6 +492,7 @@
 
     /* ---------------- 战斗 ---------------- */
     renderBattle: function () {
+      this.clearEffects();
       var s = MG.session.state;
       if (!s || s.mode !== 'level') { this.go('#/grade'); return; }
       var q = MG.session.current();
@@ -491,6 +505,13 @@
       var attacking = showFeedback && this.lastAnswer.correct;
       var heroCls = 'big' + (attacking ? (character === 'link' ? ' act-link' : ' act-mario') : '');
       var enemyCls = 'fighter right' + (attacking ? ' hit' : '');
+      var boss = enemyKey === 'boss';
+      /* 致命一击：答对且本关获胜（hp 已扣到 <=0） */
+      var killing = attacking && s.finished && s.won;
+      var reduced = this.prefersReduced();
+      if (killing && reduced) enemyCls += ' fade-out';
+      /* 答对且未要求减弱动效时，在敌人身上叠一层白闪（位于 fx 层之后） */
+      var hitFlash = (attacking && !reduced) ? '<div class="hit-flash" aria-hidden="true"></div>' : '';
       var fx = attacking ? this.fxHtml() : '';
       var hearts = '';
       for (var i = 0; i < 3; i++) hearts += '<span class="heart' + (i < s.hearts ? '' : ' off') + '">♥</span>';
@@ -513,7 +534,7 @@
           (ok && this.lastAnswer.dmg === 2 ? '<div class="super-banner">必杀！</div>' : '') +
           '<div class="fb-title">' + (ok ? (this.lastAnswer.dmg === 2 ? '连击 3 次，额外造成 1 点伤害' : '答对了！造成 ' + this.lastAnswer.dmg + ' 点伤害') : '答错了，失去 1 颗心') + '</div>' +
           '<div class="fb-explain">' + h(displayed.explain) + '</div>' +
-          '<button class="btn" data-action="continue">' + (s.finished ? '查看结算 →' : '继续 →') + '</button>' +
+          '<button class="btn' + (killing && !reduced ? ' pending' : '') + '" data-action="continue">' + (s.finished ? '查看结算 →' : '继续 →') + '</button>' +
           '</div>';
       }
 
@@ -524,7 +545,7 @@
         '<div class="hearts' + (showFeedback && !this.lastAnswer.correct ? ' hurt' : '') + '">' + hearts + '</div></div>' +
         '<div class="mid"><div class="combo">' + (s.combo > 0 ? '连击 x' + s.combo : '') + '</div>' +
         '<div class="vs">VS</div></div>' +
-        '<div class="' + enemyCls + '">' + fx + MG.sprites.imgTag(enemyKey, 'big') +
+        '<div class="' + enemyCls + '">' + fx + hitFlash + MG.sprites.imgTag(enemyKey, 'big') +
         '<div class="fname">' + (enemyKey === 'boss' ? 'BOSS' : enemyKey === 'koopa' ? '乌龟怪' : '蘑菇怪') + '</div>' +
         '<div class="hpbar"><i style="width:' + hpPct + '%"></i></div></div>' +
         '</section>' +
@@ -539,6 +560,42 @@
 
       var view = document.getElementById('view');
       this.paintQuestionCanvas(view, displayed);
+
+      if (killing && !reduced) {
+        /* t0 已同步渲染白闪+反馈；t≈100ms 先白闪后爆炸：容器加 boom、震屏、插入爆炸层并播爆炸音 */
+        var particleN = boss ? 22 : 14;
+        var particles = '';
+        for (var pi = 0; pi < particleN; pi++) {
+          var pdx = 30 + Math.round(Math.random() * 40); /* ±30~70px 整数值 */
+          var pdy = 30 + Math.round(Math.random() * 40);
+          if (Math.random() < 0.5) pdx = -pdx;
+          if (Math.random() < 0.5) pdy = -pdy;
+          particles += '<i class="p" style="--dx:' + pdx + 'px;--dy:' + pdy + 'px;--d:' +
+            (Math.random() * 0.1).toFixed(2) + 's"></i>'; /* 0~0.1s 均匀错开 */
+        }
+        var boomHtml = '<div class="boom' + (boss ? ' big' : '') + '" aria-hidden="true">' +
+          '<i class="shock"></i>' + particles + '</div>';
+        var tBoom = setTimeout(function () {
+          var arena = view.querySelector('.arena');
+          if (arena) arena.className += boss ? ' shake-hard' : ' shake';
+          var foe = view.querySelector('.fighter.right');
+          if (foe) {
+            foe.className += boss ? ' boom big' : ' boom';
+            foe.insertAdjacentHTML('beforeend', boomHtml);
+          }
+          MG.audio.play(boss ? 'boom-boss' : 'boom');
+        }, 100);
+        this.effectTimers.push(tBoom);
+        /* 普通 900ms / BOSS 1200ms 后才显示反馈按钮（pending 期间不可点），不自动跳转 */
+        var tBtn = setTimeout(function () {
+          var btn = view.querySelector('.feedback .btn');
+          if (btn) btn.classList.remove('pending');
+        }, boss ? 1200 : 900);
+        this.effectTimers.push(tBtn);
+      } else if (killing && reduced) {
+        /* reduced 降级：敌人 0.2s 淡出、按钮立即出现，仅在 t0 播一次爆炸音 */
+        MG.audio.play(boss ? 'boom-boss' : 'boom');
+      }
     },
 
     /* ---------------- 关卡结算 ---------------- */

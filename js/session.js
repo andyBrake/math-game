@@ -157,7 +157,8 @@
         dmg = 1;
         if (s.combo >= 3) { dmg = 2; s.combo = 0; }
         s.hp -= dmg;
-        MG.audio.play(dmg === 2 ? 'super' : 'correct');
+        /* 致命一击（敌人被击败）不播 correct/super，爆炸音由战斗界面统一播放，避免叠音 */
+        if (s.hp > 0) MG.audio.play(dmg === 2 ? 'super' : 'correct');
       } else {
         s.combo = 0;
         s.hearts -= 1;
