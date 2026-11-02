@@ -428,7 +428,7 @@
         return '<button class="card grade ' + (ready ? '' : 'locked') + '" ' +
           (ready ? 'data-action="nav:grade/' + g.id + '"' : 'disabled') + '>' +
           '<span class="grade-name">' + h(g.name) + '</span>' +
-          '<span class="grade-note">' + (ready ? '人教版 · 上下册' : '敬请期待') + '</span>' +
+          '<span class="grade-note">' + (ready ? '北师大版 · 上下册' : '敬请期待') + '</span>' +
           '</button>';
       }).join('');
 
