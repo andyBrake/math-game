@@ -135,7 +135,10 @@ node tools/qualitycheck.js --strict     # 按阈值返回非 0
 ```js
 window.MG_CHARACTER_ASSETS = {
   mario: 'assets/characters/mario.png',
-  link: 'assets/characters/link.png'
+  link: 'assets/characters/link.png',
+  goomba: 'assets/characters/goomba.png',
+  koopa: 'assets/characters/koopa.png',
+  boss: 'assets/characters/boss.png'
 };
 ```
 

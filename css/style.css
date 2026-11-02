@@ -595,10 +595,21 @@ body {
   50% { transform: rotate(7deg) translateY(-8px); }
 }
 
+@keyframes celebBounce {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
+  25% { transform: translateY(-16px) scale(1.06, 0.92) rotate(-6deg); }
+  45% { transform: translateY(-4px) scale(0.94, 1.06) rotate(4deg); }
+  65% { transform: translateY(-12px) scale(1.04, 0.95) rotate(-3deg); }
+  85% { transform: translateY(0) scale(0.97, 1.03) rotate(2deg); }
+}
+
 .celeb-default .avatar { animation: celebHop 1s ease-in-out infinite; }
+.celeb-mario .avatar { animation: celebJump 0.9s ease-in-out infinite; }
+.celeb-link .avatar { animation: celebSpin 1.2s ease-in-out infinite; }
 .celeb-avatar-a .avatar { animation: celebSpin 1.6s ease-in-out infinite; }
 .celeb-avatar-b .avatar { animation: celebJump 1.1s ease-in-out infinite; }
 .celeb-avatar-c .avatar { animation: celebSway 1.2s ease-in-out infinite; }
+.celeb-avatar-d .avatar { animation: celebBounce 1.1s ease-in-out infinite; }
 
 .celeb-lose .avatar { filter: grayscale(1); opacity: 0.55; }
 
@@ -904,3 +915,7 @@ body {
   .arena.shake, .arena.shake-hard { animation: none; }
   .boom .shock, .boom .p { display: none; }
 }
+
+/* ---------- 真实头像素材图：<img> 即 .avatar 元素本身 ---------- */
+img.avatar-img { object-fit: cover; display: block; }
+

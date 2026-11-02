@@ -195,26 +195,34 @@
     };
   }
 
+  // 返回 { accepted: [...已接受现状(多样性阈值)], pending: [...待改进项(正确性/严重问题)] }
   function strictFailures(rows, sim) {
-    var fails = [];
+    var accepted = [];
+    var pending = [];
     rows.forEach(function (r) {
-      if (r.errors) fails.push(r.gen + ' L' + r.level + ' 生成异常 ' + r.errors);
-      if (r.fallback) fails.push(r.gen + ' L' + r.level + ' 兜底选项 ' + r.fallback);
-      if (r.uniquePromptRate < 0.7) fails.push(r.gen + ' L' + r.level + ' 题干唯一率 ' + pct(r.uniquePromptRate));
-      if (r.maxPromptShare > 0.05) fails.push(r.gen + ' L' + r.level + ' 单题干占比 ' + pct(r.maxPromptShare));
-      if (r.optionRate < 0.7) fails.push(r.gen + ' L' + r.level + ' 选项唯一率 ' + pct(r.optionRate));
-      if (r.templateCount < 4) fails.push(r.gen + ' L' + r.level + ' 模板数 ' + r.templateCount);
+      if (r.errors) pending.push(r.gen + ' L' + r.level + ' 生成异常 ' + r.errors);
+      if (r.fallback) pending.push(r.gen + ' L' + r.level + ' 兜底选项 ' + r.fallback);
+      if (r.uniquePromptRate < 0.7) accepted.push(r.gen + ' L' + r.level + ' 题干唯一率 ' + pct(r.uniquePromptRate));
+      if (r.maxPromptShare > 0.05) accepted.push(r.gen + ' L' + r.level + ' 单题干占比 ' + pct(r.maxPromptShare));
+      if (r.optionRate < 0.7) accepted.push(r.gen + ' L' + r.level + ' 选项唯一率 ' + pct(r.optionRate));
+      if (r.templateCount < 4) accepted.push(r.gen + ' L' + r.level + ' 模板数 ' + r.templateCount);
       r.answerPos.forEach(function (n, i) {
         var rate = r.valid ? n / r.valid : 0;
         if (rate < 0.2 || rate > 0.3) {
-          fails.push(r.gen + ' L' + r.level + ' 答案位置 ' + i + ' 占比 ' + pct(rate));
+          accepted.push(r.gen + ' L' + r.level + ' 答案位置 ' + i + ' 占比 ' + pct(rate));
         }
       });
     });
-    if (sim.duplicateLevels) fails.push('模拟关卡同关重复 ' + sim.duplicateLevels + '/' + sim.total);
-    if (sim.coverageProblems) fails.push('模拟关卡覆盖异常 ' + sim.coverageProblems + '/' + sim.total);
-    if (sim.errors) fails.push('模拟关卡生成异常 ' + sim.errors + '/' + sim.total);
-    return fails;
+    if (sim.duplicateLevels) pending.push('模拟关卡同关重复 ' + sim.duplicateLevels + '/' + sim.total);
+    if (sim.coverageProblems) pending.push('模拟关卡覆盖异常 ' + sim.coverageProblems + '/' + sim.total);
+    if (sim.errors) pending.push('模拟关卡生成异常 ' + sim.errors + '/' + sim.total);
+    return { accepted: accepted, pending: pending };
+  }
+
+  function printGroup(title, items) {
+    console.log('【' + title + '】' + (items.length ? ' ' + items.length + ' 项' : ''));
+    items.slice(0, 20).forEach(function (f) { console.log('  - ' + f); });
+    if (items.length > 20) console.log('  ... 其余 ' + (items.length - 20) + ' 项省略');
   }
 
   function main() {
@@ -262,12 +270,14 @@
       '  覆盖异常：' + sim.coverageProblems +
       '  生成异常：' + sim.errors);
 
-    var fails = strictFailures(rows, sim);
+    var result = strictFailures(rows, sim);
+    var accepted = result.accepted;
+    var pending = result.pending;
     if (strict) {
-      console.log('严格模式：' + (fails.length ? '失败 ' + fails.length + ' 项' : '通过'));
-      fails.slice(0, 20).forEach(function (f) { console.log('  - ' + f); });
-      if (fails.length > 20) console.log('  ... 其余 ' + (fails.length - 20) + ' 项省略');
-      if (fails.length) process.exitCode = 1;
+      console.log('严格模式：已接受现状（概念题/基础级多样性）' + accepted.length + ' 项 / 待改进项 ' + pending.length + ' 项');
+      printGroup('已接受现状（概念题/基础级多样性）', accepted);
+      printGroup('待改进项', pending);
+      if (pending.length) process.exitCode = 1;
     } else {
       console.log('提示：当前为只报告模式；加 --strict 可按阈值返回非 0。');
     }

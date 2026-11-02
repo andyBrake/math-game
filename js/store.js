@@ -170,7 +170,7 @@
     },
 
     owns: function (id) {
-      return id === 'default' || !!this.data.owned[id];
+      return id === 'default' || id === 'mario' || id === 'link' || !!this.data.owned[id];
     },
 
     /* 购买：余额不足或已拥有都不扣费 */

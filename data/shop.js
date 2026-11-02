@@ -6,22 +6,35 @@
   var AVATARS = [
     {
       id: 'default', slot: 'avatar', kind: 'avatar', name: '默认头像', price: 0,
-      desc: '跟随当前角色（马里奥 / 林克）', celebration: '原地欢呼'
+      desc: '跟随已装备的马里奥 / 林克', celebration: '原地欢呼'
+    },
+    {
+      id: 'mario', slot: 'avatar', kind: 'avatar', name: '马里奥', price: 0,
+      desc: '经典水管工 · 免费默认头像', celebration: '原地欢呼'
+    },
+    {
+      id: 'link', slot: 'avatar', kind: 'avatar', name: '林克', price: 0,
+      desc: '勇者少年 · 免费默认头像', celebration: '原地欢呼'
     },
     {
       id: 'avatar-a', slot: 'avatar', kind: 'avatar', name: '头像 A', price: 18,
-      letter: 'A', color: '#e8453c', dark: '#a82c25',
-      desc: '红底字母占位 · 专属庆祝「旋风转体」', celebration: '旋风转体'
+      letter: 'A', color: '#e8453c', dark: '#a82c25', img: 'assets/avatars/avatar-a.png',
+      desc: '红披风小勇士 · 专属庆祝「旋风转体」', celebration: '旋风转体'
     },
     {
       id: 'avatar-b', slot: 'avatar', kind: 'avatar', name: '头像 B', price: 24,
-      letter: 'B', color: '#2f5fd0', dark: '#1d3c8c',
-      desc: '蓝底字母占位 · 专属庆祝「高举跳跃」', celebration: '高举跳跃'
+      letter: 'B', color: '#2f5fd0', dark: '#1d3c8c', img: 'assets/avatars/avatar-b.png',
+      desc: '蓝盔小剑士 · 专属庆祝「高举跳跃」', celebration: '高举跳跃'
     },
     {
       id: 'avatar-c', slot: 'avatar', kind: 'avatar', name: '头像 C', price: 30,
-      letter: 'C', color: '#9b6bd6', dark: '#6a3fa8',
-      desc: '紫底字母占位 · 专属庆祝「星光摇摆」', celebration: '星光摇摆'
+      letter: 'C', color: '#9b6bd6', dark: '#6a3fa8', img: 'assets/avatars/avatar-c.png',
+      desc: '紫袍小法师 · 专属庆祝「星光摇摆」', celebration: '星光摇摆'
+    },
+    {
+      id: 'avatar-d', slot: 'avatar', kind: 'avatar', name: '蛋仔派对', price: 50,
+      letter: 'D', color: '#ffb43c', dark: '#d98a1e', img: 'assets/avatars/avatar-d.png',
+      desc: 'Q 弹蛋仔 · 专属庆祝「弹跳摇摆」', celebration: '弹跳摇摆'
     }
   ];
 
@@ -32,7 +45,15 @@
     },
     {
       id: 'victory-theme', slot: 'music', kind: 'music', name: '冒险胜利曲', price: 16,
-      icon: '🎵', desc: '结算页播放本地音乐（可替换为 mp3）'
+      icon: '🎵', file: 'victory', desc: '结算页播放本地配乐，文件缺失自动回退 8-bit 号角'
+    },
+    {
+      id: 'fanfare-theme', slot: 'music', kind: 'music', name: '凯旋进行曲', price: 22,
+      icon: '🎺', file: 'fanfare', desc: '结算页播放本地配乐，文件缺失自动回退 8-bit 号角'
+    },
+    {
+      id: 'serenade-theme', slot: 'music', kind: 'music', name: '星空小夜曲', price: 28,
+      icon: '🌙', file: 'serenade', desc: '结算页播放本地配乐，文件缺失自动回退 8-bit 号角'
     }
   ];
 
@@ -53,9 +74,12 @@
 
   var CELEBRATIONS = [
     { id: 'celeb-default', avatar: 'default', name: '原地欢呼', desc: '默认头像专属' },
+    { id: 'celeb-mario', avatar: 'mario', name: '马里奥跳', desc: '马里奥头像专属' },
+    { id: 'celeb-link', avatar: 'link', name: '林克拔剑', desc: '林克头像专属' },
     { id: 'celeb-a', avatar: 'avatar-a', name: '旋风转体', desc: '头像 A 专属' },
     { id: 'celeb-b', avatar: 'avatar-b', name: '高举跳跃', desc: '头像 B 专属' },
-    { id: 'celeb-c', avatar: 'avatar-c', name: '星光摇摆', desc: '头像 C 专属' }
+    { id: 'celeb-c', avatar: 'avatar-c', name: '星光摇摆', desc: '头像 C 专属' },
+    { id: 'celeb-d', avatar: 'avatar-d', name: '弹跳摇摆', desc: '蛋仔派对头像专属' }
   ];
 
   var ALL = AVATARS.concat(MUSIC, EFFECTS);

@@ -42,6 +42,7 @@
     timer: null,
     effectTimers: [],
     started: false,
+    previewing: null,
 
     init: function () {
       this.app = document.getElementById('app');
@@ -166,17 +167,15 @@
         this.renderTopbar();
         return;
       }
-      if (action === 'toggle-character') {
-        var c = MG.store.data.settings.character === 'mario' ? 'link' : 'mario';
-        MG.store.setSetting('character', c);
-        this.route();
-        return;
-      }
       if (parts[0] === 'difficulty') {
         if (MG.difficulty.set(parts[1])) {
           MG.audio.play('click');
           this.route();
         }
+        return;
+      }
+      if (parts[0] === 'preview') {
+        this.previewMusic(parts[1]);
         return;
       }
       if (parts[0] === 'buy') {
@@ -217,6 +216,23 @@
       MG.audio.play('click');
       this.toast('已切换');
       this.route();
+    },
+
+    /* 商店试听：再次点同一曲目则停止；文件缺失时提示并回退 */
+    previewMusic: function (id) {
+      if (this.previewing === id) {
+        MG.music.stop();
+        this.previewing = null;
+      } else {
+        MG.music.stop();
+        if (MG.music.play(id)) {
+          this.previewing = id;
+        } else {
+          this.previewing = null;
+          this.toast('文件缺失，无法试听');
+        }
+      }
+      this.renderShop();
     },
 
     toast: function (message) {
@@ -283,15 +299,12 @@
       var backHash = '#/grade';
       if (st && st.mode === 'level') backHash = '#/map/' + st.unitId.split('-')[0];
       else if (st && st.mode === 'exam') backHash = '#/map/' + st.semesterId;
-      var charKey = MG.store.data.settings.character === 'link' ? 'link' : 'mario';
       var left = inBattle
         ? '<button class="ghost" data-action="nav:' + backHash.slice(2) + '">← 返回地图</button>'
         : '<button class="ghost" data-action="nav:grade">🏠 首页</button>';
       bar.innerHTML =
         '<div class="bar-left">' + left + '</div>' +
         '<div class="bar-right">' +
-        '<button class="ghost" data-action="toggle-character" title="切换角色">' +
-        MG.sprites.imgTag(charKey, 'mini') + '<span>' + (charKey === 'mario' ? '马里奥' : '林克') + '</span></button>' +
         '<button class="ghost wallet" data-action="nav:shop" title="金币商店">🪙 <b>' + MG.store.data.coins + '</b><span class="wallet-label">商店</span></button>' +
         '<button class="ghost" data-action="toggle-mute">' + (MG.audio.muted ? '🔇 静音' : '🔊 音效') + '</button>' +
         '<button class="ghost" data-action="nav:report">📊 学习报告</button>' +
@@ -381,11 +394,17 @@
     avatarHtml: function (id, cls) {
       var avatarId = id || MG.store.data.equipped.avatar;
       var extra = cls ? ' ' + cls : '';
-      if (avatarId === 'default') {
-        return '<span class="avatar avatar-default' + extra + '">' +
-          MG.sprites.imgTag(MG.store.data.settings.character, 'avatar-img') + '</span>';
+      /* 马里奥 / 林克 / 默认头像均使用像素画 sprite 渲染 */
+      var pixelKey = avatarId === 'link' ? 'link'
+        : (avatarId === 'mario' || avatarId === 'default') ? 'mario' : null;
+      if (pixelKey) {
+        return '<span class="avatar avatar-' + avatarId + extra + '">' +
+          MG.sprites.imgTag(pixelKey, 'avatar-img') + '</span>';
       }
       var item = MG.shop.avatar(avatarId);
+      if (item && item.img) {
+        return '<img class="avatar avatar-img' + extra + '" src="' + h(item.img) + '" alt="' + h(item.name || item.id) + '">';
+      }
       if (!item || !item.letter) {
         return this.avatarHtml('default', cls);
       }
@@ -500,7 +519,7 @@
       var displayed = showFeedback ? this.lastAnswer.question : q;
       if (!displayed) { this.go('#/result'); return; }
 
-      var character = MG.store.data.settings.character === 'link' ? 'link' : 'mario';
+      var character = MG.store.data.equipped.avatar === 'link' ? 'link' : 'mario';
       var enemyKey = ENEMY_BY_UNIT[(s.index + s.unitId.length) % ENEMY_BY_UNIT.length];
       var attacking = showFeedback && this.lastAnswer.correct;
       var heroCls = 'big' + (attacking ? (character === 'link' ? ' act-link' : ' act-mario') : '');
@@ -675,13 +694,20 @@
         return '<span class="item-icon">' + item.icon + '</span>';
       }
 
+      /* 仅带本地文件的音乐曲目显示试听按钮；默认号角（无 file）不显示 */
+      function previewBtn(item) {
+        if (item.kind !== 'music' || !item.file) return '';
+        var on = self.previewing === item.id;
+        return '<button class="btn small" data-action="preview:' + item.id + '">' + (on ? '停止' : '试听') + '</button>';
+      }
+
       function card(item) {
         var cls = 'shop-item' + (MG.store.data.equipped[item.slot] === item.id ? ' equipped' : '');
         return '<article class="' + cls + '">' +
           '<div class="item-preview">' + previewHtml(item) + '</div>' +
           '<h4>' + h(item.name) + '</h4>' +
           '<p class="item-desc">' + h(item.desc) + '</p>' +
-          '<div class="item-foot">' + priceHtml(item) + actionHtml(item) + '</div>' +
+          '<div class="item-foot">' + priceHtml(item) + actionHtml(item) + previewBtn(item) + '</div>' +
           '</article>';
       }
 
