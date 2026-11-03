@@ -151,12 +151,45 @@
 
   /* ---------- U1（保持原实现） ---------- */
   extend('g4a.u1.table', function (level) {
+    var mode = U.pick(['yi2wan', 'wan2yi', 'qian2wan', 'qian2yi']);
+    if (mode === 'yi2wan') {
+      var e = U.randInt(3, 900);
+      var cands = [10, 100, 1000, 10000, 20, 50, 200, 500];
+      return q({
+        topicId: 'g4a.u1.table', level: 4,
+        prompt: who() + '想：10 个一百万是一千万，10 个一千万是一亿。那么 ' + e + ' 亿里面有（ ）个一百万。',
+        correct: e * 100,
+        wrongs: w3(e * 100, cands.map(function (v) { return v * e; }).concat([e * 10, e * 1000, e * 100 + 100, e * 100 - 100])),
+        explain: '1 亿 = 100 个一百万，' + e + ' 亿 = ' + e + ' × 100 = ' + (e * 100) + ' 个一百万。'
+      });
+    }
+    if (mode === 'wan2yi') {
+      return q({
+        topicId: 'g4a.u1.table', level: 4,
+        prompt: '十万十万地数，数（ ）次是一千万。',
+        correct: 100,
+        wrongs: w3(100, [10, 1000, 10000, 100, 20, 50, 200, 500]),
+        explain: '一千万 = 1000 万，十万 = 10 万，1000 ÷ 10 = 100，所以数 100 次。'
+      });
+    }
+    if (mode === 'qian2wan') {
+      var k = U.randInt(2, 9);
+      return q({
+        topicId: 'g4a.u1.table', level: 4,
+        prompt: '一百万里面有（ ）个十万，' + k + ' 个一百万是（ ）万。',
+        correct: '10；' + (k * 100),
+        wrongs: three('10；' + (k * 100), ['10；' + k, '100；' + (k * 100), '10；' + (k * 1000), '1；' + (k * 100), '10；' + (k * 10 + 10), '100；' + (k * 10)]),
+        explain: '一百万 = 10 个十万；' + k + ' 个一百万 = ' + (k * 100) + ' 万。'
+      });
+    }
+    // qian2yi: 几个一千万是几亿
+    var m = U.pick([20, 30, 40, 50, 60, 70, 80, 90]);
     return q({
       topicId: 'g4a.u1.table', level: 4,
-      prompt: who() + '想：10 个一百万是一千万，10 个一千万是一亿。那么一亿里面有（ ）个一百万。',
-      correct: 100,
-      wrongs: w3(100, [10, 1000, 10000, 100000, 100, 20, 50]),
-      explain: '1 亿 = 10 个一千万，1 个一千万 = 10 个一百万，所以 1 亿 = 10 × 10 = 100 个一百万。'
+      prompt: who() + '数数位：' + m + ' 个一千万是（ ）亿。',
+      correct: m / 10,
+      wrongs: w3(m / 10, [m, m * 10, m / 100, m / 10 + 1, m / 10 - 1, m / 10 + 2, m / 10 * 2, m / 5]),
+      explain: '10 个一千万 = 1 亿，' + m + ' 个一千万 = ' + (m / 10) + ' 亿。'
     });
   });
 
@@ -210,38 +243,99 @@
   });
 
   extend('g4a.u1.convert', function (level) {
-    var toYi = Math.random() < 0.5;
-    var correct, pool, explain;
-    if (toYi) {
+    var mode = U.pick(['toYi', 'toWan', 'compose', 'yiRound']);
+    if (mode === 'toYi') {
       var e = U.randInt(3, 900);
-      correct = e + '亿';
-      pool = [(e + 1) + '亿', (e - 1) + '亿', (e * 10) + '亿', (e + 2) + '亿', (e - 2) + '亿', e + ''];
-      explain = '去掉末尾 8 个 0 加“亿”：' + (e * 100000000) + ' = ' + e + '亿。';
-    } else {
-      var w = U.randInt(120, 9999);
-      correct = w + '万';
-      pool = [(w + 1) + '万', (w - 1) + '万', (w * 10) + '万', (w + 10) + '万', (w - 10) + '万', w + ''];
-      explain = '去掉末尾 4 个 0 加“万”：' + (w * 10000) + ' = ' + w + '万。';
+      var c1 = e + '亿';
+      return q({
+        topicId: 'g4a.u1.convert', level: 4,
+        prompt: '改写挑战：' + (e * 100000000) + ' 改写成用「亿」作单位是（ ）',
+        correct: c1,
+        wrongs: w3(c1, [(e + 1) + '亿', (e - 1) + '亿', (e * 10) + '亿', (e + 2) + '亿', e + '', (e + 10) + '亿']),
+        explain: '去掉末尾 8 个 0 加"亿"：' + (e * 100000000) + ' = ' + e + '亿。'
+      });
     }
+    if (mode === 'toWan') {
+      var w = U.randInt(120, 9999);
+      var c2 = w + '万';
+      return q({
+        topicId: 'g4a.u1.convert', level: 4,
+        prompt: '把整万数 ' + (w * 10000) + ' 改写成用「万」作单位，应写作（ ）',
+        correct: c2,
+        wrongs: w3(c2, [(w + 1) + '万', (w - 1) + '万', (w * 10) + '万', (w + 10) + '万', w + '', (w + 100) + '万']),
+        explain: '去掉末尾 4 个 0 加"万"：' + (w * 10000) + ' = ' + w + '万。'
+      });
+    }
+    if (mode === 'compose') {
+      var yi = U.randInt(2, 9), wan = U.randInt(1, 9999);
+      var num = yi * 100000000 + wan * 10000;
+      var c3 = String(num / 10000) + '万';
+      return q({
+        topicId: 'g4a.u1.convert', level: 4,
+        prompt: '一个数由 ' + yi + ' 个亿和 ' + wan + ' 个万组成，把它改写成用「万」作单位是（ ）',
+        correct: c3,
+        wrongs: w3(c3, [(num / 10000 + 1) + '万', (num / 10000 - 1) + '万', (num / 1000) + '万', (yi + 1) + '亿', (wan + 1) + '万', (num / 100000) + '万']),
+        explain: yi + ' 个亿 = ' + (yi * 10000) + ' 万，加上 ' + wan + ' 万 = ' + (num / 10000) + ' 万。'
+      });
+    }
+    // yiRound: 先改写成亿作单位，再省略亿位尾数
+    var big = U.randInt(12, 980) * 100000000 + U.randInt(50000000, 99999999);
+    var yiPart = Math.floor(big / 100000000);
+    var c4 = (yiPart + 1) + '亿';
     return q({
       topicId: 'g4a.u1.convert', level: 4,
-      prompt: '改写挑战：' + (toYi ? (parseInt(correct, 10) * 100000000) : (parseInt(correct, 10) * 10000)) + ' 改写成用「' + (toYi ? '亿' : '万') + '」作单位是（ ）',
-      correct: correct,
-      wrongs: w3(correct, pool),
-      explain: explain
+      prompt: '把 ' + big + ' 先改写成用「亿」作单位，再省略亿位后面的尾数，约是（ ）',
+      correct: c4,
+      wrongs: w3(c4, [yiPart + '亿', (yiPart + 2) + '亿', (yiPart + 10) + '亿', (yiPart - 1) + '亿', yiPart + '', c4 + '万']),
+      explain: big + ' 的千万位 ≥ 5，向亿位进 1，约是 ' + (yiPart + 1) + ' 亿。'
     });
   });
 
   extend('g4a.u1.round', function (level) {
-    var w = U.randInt(12, 980);
-    var n = w * 10000 + 5000;
-    var ans = (w + 1) + '万';
+    var mode = U.pick(['upWan', 'downWan', 'upShi', 'yi']);
+    if (mode === 'upWan') {
+      var w = U.randInt(12, 980);
+      var n = w * 10000 + 5000;
+      var ans = (w + 1) + '万';
+      return q({
+        topicId: 'g4a.u1.round', level: 4,
+        prompt: '四舍五入临界题：' + n + ' 省略万位后面的尾数（千位正好是 5），约是（ ）',
+        correct: ans,
+        wrongs: w3(ans, [w + '万', (w + 2) + '万', (w + 10) + '万', (w - 1) + '万', (w + 3) + '万', w + '']),
+        explain: n + ' 的千位是 5，正好满 5，要向前一位进 1，所以 ' + w + ' 万进成 ' + (w + 1) + ' 万。'
+      });
+    }
+    if (mode === 'downWan') {
+      var w2 = U.randInt(12, 980);
+      var n2 = w2 * 10000 + 4000;
+      return q({
+        topicId: 'g4a.u1.round', level: 4,
+        prompt: '把 ' + n2 + ' 四舍五入到万位（千位是 4，不满 5），约是（ ）',
+        correct: w2 + '万',
+        wrongs: w3(w2 + '万', [(w2 + 1) + '万', (w2 + 2) + '万', (w2 - 1) + '万', (w2 + 10) + '万', w2 + '']),
+        explain: n2 + ' 的千位是 4，不满 5，要舍去，所以约是 ' + w2 + ' 万。'
+      });
+    }
+    if (mode === 'upShi') {
+      var sw = U.randInt(12, 980);
+      var n3 = sw * 100000 + 50000;
+      return q({
+        topicId: 'g4a.u1.round', level: 4,
+        prompt: '把 ' + n3 + ' 省略十万位后面的尾数（万位正好是 5），约是（ ）',
+        correct: (sw + 1) + '十万',
+        wrongs: w3((sw + 1) + '十万', [sw + '十万', (sw + 2) + '十万', (sw + 10) + '十万', sw * 10 + '万', (sw + 1) * 10 + '万']),
+        explain: n3 + ' 的万位是 5，向十万位进 1，约是 ' + (sw + 1) + ' 十万。'
+      });
+    }
+    // yi: 四舍五入到亿位
+    var yi = U.randInt(12, 98);
+    var n4 = yi * 100000000 + 50000000;
     return q({
       topicId: 'g4a.u1.round', level: 4,
-      prompt: '四舍五入临界题：' + n + ' 省略万位后面的尾数（千位正好是 5），约是（ ）',
-      correct: ans,
-      wrongs: w3(ans, [w + '万', (w + 2) + '万', (w + 10) + '万', (w - 1) + '万', (w + 3) + '万', w + '']),
-      explain: n + ' 的千位是 5，正好满 5，要向前一位进 1，所以 ' + w + ' 万进成 ' + (w + 1) + ' 万。'
+      prompt: '某市人口约 ' + n4 + ' 人，四舍五入到亿位，约是（ ）人',
+      correct: (yi + 1) + '亿',
+      wrongs: w3((yi + 1) + '亿', [yi + '亿', (yi + 2) + '亿', (yi + 10) + '亿', (yi - 1) + '亿', yi * 10000 + '万']),
+      explain: n4 + ' 的千万位是 5，向亿位进 1，约是 ' + (yi + 1) + ' 亿人。'
     });
   });
 
@@ -446,7 +540,7 @@
   });
 
   extend('g4a.u2.draw', function (level) {
-    var mode = U.pick(['combo', 'combo', 'step']);
+    var mode = U.pick(['combo', 'step', 'sub']);
     var nm = who();
     if (mode === 'step') {
       return q({
@@ -454,11 +548,28 @@
         prompt: U.pick([
           nm + '用量角器画角，第一步是先画一条（ ），再让量角器中心点与它的端点重合',
           '画角时先画一条射线，再把量角器的（ ）与射线端点重合',
-          '第 ' + gno() + ' 组：用量角器画角，零刻度线要与（ ）重合'
+          '第 ' + gno() + ' 组：用量角器画角，零刻度线要与（ ）重合',
+          nm + '画一个 60° 的角时，量角器的中心点要与射线的（ ）重合'
         ]),
         correct: '射线',
         wrongs: w3('射线', ['射线', '直线', '线段', '曲线', '端点', '圆心']),
         explain: '画角步骤：先画一条射线 → 量角器中心点与射线端点重合 → 零刻度线与射线重合 → 描点连线。'
+      });
+    }
+    if (mode === 'sub') {
+      /* 拼角减法：135°−45°=90° 等 */
+      var sub = U.pick([
+        { c: '15°', e: '60° − 45° = 15°' },
+        { c: '30°', e: '90° − 60° = 30°' },
+        { c: '150°', e: '90° + 60° = 150°' },
+        { c: '75°', e: '45° + 30° = 75°' }
+      ]);
+      return q({
+        topicId: 'g4a.u2.draw', level: 4,
+        prompt: nm + '用一副三角尺，通过相减拼出一个角。下面哪个角一定拼得出来？',
+        correct: sub.c,
+        wrongs: w3(sub.c, ['15°', '30°', '45°', '60°', '75°', '90°', '105°', '120°', '135°', '150°', '20°', '80°']),
+        explain: sub.e + '。一副三角尺的角通过相加减可拼出这些角。'
       });
     }
     var combo = U.pick([
@@ -466,17 +577,19 @@
       { c: '135°', e: '90° + 45° = 135°' },
       { c: '150°', e: '90° + 60° = 150°' },
       { c: '75°', e: '45° + 30° = 75°' },
-      { c: '120°', e: '90° + 30° = 120°' }
+      { c: '120°', e: '90° + 30° = 120°' },
+      { c: '180°', e: '90° + 90° = 180°' }
     ]);
     return q({
       topicId: 'g4a.u2.draw', level: 4,
       prompt: U.pick([
         nm + '用一副三角尺（30°、45°、60°、90°）拼角，下面哪个角一定拼得出来？',
         '第 ' + gno() + ' 组：用一副三角尺，哪个度数的角可以直接拼出来？',
-        '借助一副三角尺，下面哪个角画得出来？'
+        '借助一副三角尺，下面哪个角画得出来？',
+        nm + '拼角挑战：用 30° 和 45° 的角相加，能拼出下面哪个角？'
       ]),
       correct: combo.c,
-      wrongs: w3(combo.c, ['105°', '135°', '150°', '75°', '120°', '80°', '20°', '55°']),
+      wrongs: w3(combo.c, ['105°', '135°', '150°', '75°', '120°', '180°', '80°', '20°', '55°']),
       explain: combo.e + '。一副三角尺可通过相加相减拼出这些角。'
     });
   });
@@ -555,14 +668,49 @@
   });
 
   extend('g4a.u3.mul3', function (level) {
-    var a = U.pick([408, 312, 506, 240, 114]);
-    var b = U.pick([23, 47, 35, 62, 21]);
+    var mode = U.pick(['direct', 'zeroMid', 'zeroEnd', 'word']);
+    if (mode === 'direct') {
+      var a = U.pick([408, 312, 506, 240, 114, 607, 819, 725, 936, 528]);
+      var b = U.pick([23, 47, 35, 62, 21, 58, 34, 76, 49, 88]);
+      return q({
+        topicId: 'g4a.u3.mul3', level: 4,
+        prompt: '三位数乘两位数挑战：' + a + ' × ' + b + ' = （ ）',
+        correct: a * b,
+        wrongs: w3(a * b, [a * b + a, a * b - a, Number(String(a * b) + '0'), a * b + 100, a * b - 100, a * b + 10, a * b + b]),
+        explain: '用第二个因数每一位分别乘 ' + a + '，注意进位，结果是 ' + (a * b) + '。'
+      });
+    }
+    if (mode === 'zeroMid') {
+      var a2 = U.pick([405, 603, 807, 504, 702, 906, 308]);
+      var b2 = U.pick([14, 26, 32, 43, 51, 67, 82]);
+      return q({
+        topicId: 'g4a.u3.mul3', level: 4,
+        prompt: who() + '竖式计算：' + a2 + ' × ' + b2 + ' = （ ）（注意因数中间有 0）',
+        correct: a2 * b2,
+        wrongs: w3(a2 * b2, [a2 * b2 + a2, a2 * b2 - a2, a2 * b2 + b2, a2 * b2 + 100, a2 * b2 - 100, a2 * b2 + 1]),
+        explain: a2 + ' 中间有 0，乘的时候别漏位：' + a2 + ' × ' + b2 + ' = ' + (a2 * b2) + '。'
+      });
+    }
+    if (mode === 'zeroEnd') {
+      var a3 = U.pick([340, 560, 780, 250, 490, 620, 870]);
+      var b3 = U.pick([20, 30, 40, 50, 60, 70, 80]);
+      return q({
+        topicId: 'g4a.u3.mul3', level: 4,
+        prompt: '口算挑战（因数末尾有 0）：' + a3 + ' × ' + b3 + ' = （ ）',
+        correct: a3 * b3,
+        wrongs: w3(a3 * b3, [a3 * b3 / 10, a3 * b3 * 10, a3 * b3 + 100, a3 * b3 - 100, a3 * b3 + 10, a3 * b3 + 1]),
+        explain: '先算 ' + (a3 / 10) + ' × ' + (b3 / 10) + ' = ' + ((a3 / 10) * (b3 / 10)) + '，末尾补 2 个 0，得 ' + (a3 * b3) + '。'
+      });
+    }
+    // word: 电影院座位
+    var rows = U.pick([35, 42, 28, 36, 45, 32, 50]);
+    var cols = U.pick([12, 14, 16, 11, 13, 15, 18]);
     return q({
       topicId: 'g4a.u3.mul3', level: 4,
-      prompt: '三位数乘两位数挑战：' + a + ' × ' + b + ' = （ ）',
-      correct: a * b,
-      wrongs: w3(a * b, [a * b + a, a * b - a, Number(String(a * b) + '0'), a * b + 100, a * b - 100, a * b + 10]),
-      explain: '用第二个因数每一位分别乘 ' + a + '，注意中间有 0 的乘法，结果是 ' + (a * b) + '。'
+      prompt: '电影院有 ' + rows + ' 排座位，每排 ' + cols + ' 个，这个电影院一共能坐多少人？',
+      correct: rows * cols,
+      wrongs: w3(rows * cols, [rows * cols + rows, rows * cols - rows, rows * cols + cols, rows * cols + 100, rows * cols - 100, rows + cols]),
+      explain: '总座位 = 排数 × 每排座位 = ' + rows + ' × ' + cols + ' = ' + (rows * cols) + '。'
     });
   });
 
@@ -755,10 +903,10 @@
 
   extend('g4a.u5.add', function (level) {
     var form = U.pick([
-      function () { return { p: '91 + 34 + 109 + 366 = （ ）', ans: 600, e: '91+109=200，34+366=400，合起来 600。' }; },
-      function () { var a = U.pick([88, 77, 66]), b = U.randInt(130, 170); return { p: a + ' + ' + b + ' + (200 − ' + b + ') = （ ）', ans: a + 200, e: b + ' 和 (200−' + b + ') 凑成 200，再 ' + a + '+200。' }; },
-      function () { return { p: '57 + 288 + 43 = （ ）', ans: 388, e: '57+43=100，100+288=388。' }; },
-      function () { return { p: '88 + 156 + 44 = （ ）', ans: 288, e: '156+44=200，88+200=288。' }; }
+      function () { var a = U.randInt(80, 99), b = U.randInt(80, 99); var c = U.randInt(101, 120), d = U.randInt(101, 120); return { p: a + ' + ' + b + ' + ' + c + ' + ' + d + ' = （ ）', ans: a + b + c + d, e: a + '+' + c + '=' + (a + c) + '，' + b + '+' + d + '=' + (b + d) + '，合起来 ' + (a + c + b + d) + '。' }; },
+      function () { var a = U.pick([88, 77, 66, 55]), b = U.randInt(130, 170); return { p: a + ' + ' + b + ' + (200 − ' + b + ') = （ ）', ans: a + 200, e: b + ' 和 (200−' + b + ') 凑成 200，再 ' + a + '+200=' + (a + 200) + '。' }; },
+      function () { var c = U.randInt(50, 60), d = U.randInt(40, 50); return { p: c + ' + 288 + ' + d + ' = （ ）', ans: c + 288 + d, e: c + '+' + d + '=' + (c + d) + '，' + (c + d) + '+288=' + (c + d + 288) + '。' }; },
+      function () { var e = U.pick([88, 76, 57, 69]); var f = U.randInt(150, 160); return { p: e + ' + ' + f + ' + (200 − ' + f + ') = （ ）', ans: e + 200, e: f + ' 和 (200−' + f + ') 凑成 200，再 ' + e + '+200=' + (e + 200) + '。' }; }
     ]);
     var f = form();
     return q({
@@ -773,8 +921,8 @@
   extend('g4a.u5.sub', function (level) {
     var form = U.pick([
       function () { var a = U.randInt(300, 900), b = U.randInt(80, 150), c = 160 - b; return { p: a + ' − ' + b + ' − ' + c + ' = （ ）', ans: a - 160, e: b + '+' + c + '=160，' + a + '−160=' + (a - 160) + '。' }; },
-      function () { return { p: '100 − 24 − 36 = （ ）', ans: 40, e: '100−(24+36)=100−60=40。' }; },
-      function () { return { p: '520 − 137 − 63 = （ ）', ans: 320, e: '520−(137+63)=520−200=320。' }; }
+      function () { var t = U.randInt(100, 200), s = U.randInt(20, 50); return { p: t + ' − ' + s + ' − ' + (100 - s) + ' = （ ）', ans: t - 100, e: s + '+' + (100 - s) + '=100，' + t + '−100=' + (t - 100) + '。' }; },
+      function () { var u = U.randInt(400, 600); return { p: u + ' − 137 − 63 = （ ）', ans: u - 200, e: '137+63=200，' + u + '−200=' + (u - 200) + '。' }; }
     ]);
     var f = form();
     return q({
@@ -788,10 +936,10 @@
 
   extend('g4a.u5.mul', function (level) {
     var form = U.pick([
-      function () { return { p: '125 × 3 × 8 = （ ）', ans: 3000, e: '125×8=1000，1000×3=3000。' }; },
-      function () { return { p: '9 × 125 × 8 = （ ）', ans: 9000, e: '125×8=1000，9×1000=9000。' }; },
-      function () { return { p: '38 × 25 × 4 = （ ）', ans: 3800, e: '25×4=100，38×100=3800。' }; },
-      function () { return { p: '24 × 25 = （ ）', ans: 600, e: '24=6×4，4×25=100，6×100=600。' }; }
+      function () { var k = U.pick([2, 3, 4, 5, 6]); return { p: '125 × ' + k + ' × 8 = （ ）', ans: 125 * 8 * k, e: '125×8=1000，1000×' + k + '=' + (1000 * k) + '。' }; },
+      function () { var a = U.pick([38, 48, 56, 72, 64]); return { p: a + ' × 25 × 4 = （ ）', ans: a * 100, e: '25×4=100，' + a + '×100=' + (a * 100) + '。' }; },
+      function () { var b = U.pick([24, 36, 28, 44, 16]); return { p: b + ' × 25 = （ ）', ans: b * 25, e: b + '=4×' + (b / 4) + '，4×25=100，100×' + (b / 4) + '=' + (b * 25) + '。' }; },
+      function () { var c = U.pick([15, 25, 35, 45]); var d = U.pick([6, 8, 4, 12]); return { p: c + ' × ' + d + ' × 2 = （ ）', ans: c * d * 2, e: c + '×2=' + (c * 2) + '，' + (c * 2) + '×' + d + '=' + (c * d * 2) + '。' }; }
     ]);
     var f = form();
     return q({
@@ -805,10 +953,10 @@
 
   extend('g4a.u5.dist', function (level) {
     var form = U.pick([
-      function () { return { p: '(80 + 4) × 25 = （ ）', ans: 2100, e: '80×25 + 4×25 = 2000+100 = 2100。' }; },
-      function () { return { p: '34 × 72 + 34 × 28 = （ ）', ans: 3400, e: '= 34×(72+28) = 34×100 = 3400。' }; },
-      function () { return { p: '(20 + 4) × 25 = （ ）', ans: 600, e: '20×25 + 4×25 = 500+100 = 600。' }; },
-      function () { return { p: '47 × 102 = （ ）', ans: 4794, e: '= 47×(100+2) = 4700+94 = 4794。' }; }
+      function () { var a = U.pick([80, 40, 60, 20]); var b = U.pick([4, 8, 3, 5]); return { p: '(' + a + ' + ' + b + ') × 25 = （ ）', ans: (a + b) * 25, e: a + '×25 + ' + b + '×25 = ' + (a * 25) + '+' + (b * 25) + ' = ' + ((a + b) * 25) + '。' }; },
+      function () { var c = U.pick([34, 46, 58, 27, 63]); var d = U.randInt(20, 40); return { p: c + ' × ' + d + ' + ' + c + ' × ' + (100 - d) + ' = （ ）', ans: c * 100, e: '= ' + c + '×(' + d + '+' + (100 - d) + ') = ' + c + '×100 = ' + (c * 100) + '。' }; },
+      function () { var e = U.pick([47, 36, 58, 72]); return { p: e + ' × 102 = （ ）', ans: e * 102, e: '= ' + e + '×(100+2) = ' + (e * 100) + '+' + (e * 2) + ' = ' + (e * 102) + '。' }; },
+      function () { var f = U.pick([99, 98, 97]); var g = U.pick([35, 46, 58, 27]); return { p: g + ' × ' + f + ' = （ ）', ans: g * f, e: '= ' + g + '×(100−' + (100 - f) + ') = ' + (g * 100) + '−' + (g * (100 - f)) + ' = ' + (g * f) + '。' }; }
     ]);
     var f = form();
     return q({
@@ -822,10 +970,10 @@
 
   extend('g4a.u5.simplify', function (level) {
     var form = U.pick([
-      function () { return { p: '25 × 32 × 125 = （ ）', ans: 100000, e: '32=4×8，25×4=100，125×8=1000，100×1000=100000。' }; },
-      function () { return { p: '88 + 156 + 44 = （ ）', ans: 288, e: '156+44=200，88+200=288。' }; },
-      function () { return { p: '38 × 25 × 4 = （ ）', ans: 3800, e: '25×4=100，38×100=3800。' }; },
-      function () { return { p: '(13 × 5) × 6 = （ ）', ans: 390, e: '5×6=30，13×30=390。' }; }
+      function () { var k = U.pick([32, 16, 24]); return { p: '25 × ' + k + ' × 125 = （ ）', ans: 25 * k * 125, e: k + '=4×' + (k / 4) + '，25×4=100，125×' + (k / 4) + '=' + (125 * k / 4) + '，合起来 ' + (25 * k * 125) + '。' }; },
+      function () { var a = U.pick([88, 76, 57, 69]); var b = U.randInt(130, 170); return { p: a + ' + ' + b + ' + (' + (200 - b) + ') = （ ）', ans: a + 200, e: b + ' 和 (' + (200 - b) + ') 凑成 200，再 ' + a + '+200=' + (a + 200) + '。' }; },
+      function () { var c = U.pick([38, 46, 57, 63]); return { p: c + ' × 25 × 4 = （ ）', ans: c * 100, e: '25×4=100，' + c + '×100=' + (c * 100) + '。' }; },
+      function () { var d = U.pick([13, 17, 19, 23]); var e = U.pick([6, 4, 3, 5]); return { p: '(' + d + ' × 5) × ' + e + ' = （ ）', ans: d * 5 * e, e: '5×' + e + '=' + (5 * e) + '，' + d + '×' + (5 * e) + '=' + (d * 5 * e) + '。' }; }
     ]);
     var f = form();
     return q({
@@ -838,7 +986,7 @@
   });
 
   extend('g4a.u5.count', function (level) {
-    var n = U.randInt(6, 9);
+    var n = U.randInt(6, 15);
     var ans = n * (n - 1) / 2;
     return q({
       topicId: 'g4a.u5.count', level: 4,
@@ -999,15 +1147,24 @@
 
   /* ---------- U8 ---------- */
   extend('g4a.u8.read', function (level) {
-    var cats = ['春季', '夏季', '秋季', '冬季'];
-    var vals = U.shuffle([37, 36, 41, 53]);
-    var idx = U.randInt(0, 3);
+    var cats = U.pick([
+      ['春季', '夏季', '秋季', '冬季'],
+      ['一班', '二班', '三班', '四班'],
+      ['语文', '数学', '英语', '美术']
+    ]);
+    var vals = [];
+    while (vals.length < cats.length) {
+      var v = U.randInt(15, 58);
+      if (vals.indexOf(v) === -1) vals.push(v);
+    }
+    vals = U.shuffle(vals);
+    var idx = U.randInt(0, cats.length - 1);
     return q({
       topicId: 'g4a.u8.read', level: 4,
-      prompt: who() + '看四年级同学生日季节统计图，' + cats[idx] + ' 过生日的有多少人？',
+      prompt: who() + '看四年级同学生日（或喜好）统计图，' + cats[idx] + ' 对应的有多少人？',
       canvas: { kind: 'bar-chart', categories: cats, values: vals, unit: '人' },
       correct: vals[idx],
-      wrongs: w3(vals[idx], vals.filter(function (_, i) { return i !== idx; }).concat([vals[idx] + 1, vals[idx] - 1])),
+      wrongs: w3(vals[idx], vals.filter(function (_, i) { return i !== idx; }).concat([vals[idx] + 1, vals[idx] - 1, vals[idx] + 5, vals[idx] - 5])),
       explain: '看' + cats[idx] + '对应的直条，顶端对准刻度 ' + vals[idx] + '。'
     });
   });
@@ -1139,27 +1296,28 @@
   });
 
   extend('g4b.u1.zero', function (level) {
-    /* 多样性：5 个模板 × 随机数值/对象 */
+    /* 多样性：7 个模板 × 随机数值/对象 */
     var templates = [];
-    /* 模板1：末尾 0 化简 */
-    var trimPairs = [['8.200', '8.2'], ['15.60', '15.6'], ['3.070', '3.07'], ['0.500', '0.5'], ['10.200', '10.2'], ['6.00', '6'], ['0.090', '0.09'], ['20.30', '20.3']];
+    var trimPairs = [['8.200', '8.2'], ['15.60', '15.6'], ['3.070', '3.07'], ['0.500', '0.5'], ['10.200', '10.2'], ['6.00', '6'], ['0.090', '0.09'], ['20.30', '20.3'], ['7.400', '7.4'], ['12.050', '12.05']];
     var tp = U.pick(trimPairs);
     templates.push({ p: '不改变数的大小，把 ' + tp[0] + ' 化简后是（ ）', ans: tp[1], e: '小数的末尾添上或去掉 0，大小不变。' + tp[0] + ' 末尾的 0 去掉 = ' + tp[1] + '。' });
-    /* 模板2：以 0.001 为单位改写 */
-    var unitNums = ['0.5', '1.2', '3.08', '0.07', '5.6', '2.4'];
+    var unitNums = ['0.5', '1.2', '3.08', '0.07', '5.6', '2.4', '0.9', '4.2'];
     var un = U.pick(unitNums);
     templates.push({ p: who() + '把 ' + un + ' 改写成以 0.001 为单位的数是（ ）', ans: fmt3(Math.round(parseFloat(un) * 1000)), e: '以 0.001 为单位就是三位小数，末尾添 0：' + un + ' = ' + fmt3(Math.round(parseFloat(un) * 1000)) + '。' });
-    /* 模板3：计数单位不同 */
-    var pairNums = U.pick([['0.3', '0.30'], ['1.5', '1.500'], ['0.08', '0.080']]);
-    templates.push({ p: pairNums[0] + ' 和 ' + pairNums[1] + ' 相比，它们的（ ）不同', ans: '计数单位', e: pairNums[0] + ' = ' + pairNums[1] + ' 大小相等；但 ' + pairNums[0] + ' 的计数单位是 0.1，' + pairNums[1] + ' 的计数单位是 0.001。' });
-    /* 模板4：判断哪个 0 不能去 */
-    var cantTrim = U.pick(['600', '30.07', '0.09', '105.008', '200.5', '40.04']);
+    var pairNums = U.pick([['0.3', '0.30'], ['1.5', '1.500'], ['0.08', '0.080'], ['0.6', '0.600']]);
+    templates.push({ p: pairNums[0] + ' 和 ' + pairNums[1] + ' 相比，它们的（ ）不同', ans: '计数单位', e: pairNums[0] + ' = ' + pairNums[1] + ' 大小相等；但计数单位不同。' });
+    var cantTrim = U.pick(['600', '30.07', '0.09', '105.008', '200.5', '40.04', '50.600']);
     templates.push({ p: who() + '说：下面各数中，"0"不能去掉的是（ ）', ans: cantTrim, e: cantTrim + ' 中的 0 不在小数末尾，去掉会改变大小，所以不能去掉。' });
-    /* 模板5：写成两位小数 */
-    var yuanInt = U.randInt(3, 20);
+    var yuanInt = U.randInt(3, 30);
     templates.push({ p: '把 ' + yuanInt + ' 元写成以"元"为单位的两位小数是（ ）', ans: fmtCents(yuanInt * 100), e: '小数末尾添 0 大小不变，' + yuanInt + ' 元 = ' + fmtCents(yuanInt * 100) + ' 元。' });
+    /* 新增：比较大小 */
+    var cmpA = U.randInt(100, 900) / 100, cmpB = U.randInt(100, 900) / 100;
+    templates.push({ p: who() + '比较 ' + cmpA + ' 和 ' + cmpB + ' 的大小，较大的是（ ）', ans: String(Math.max(cmpA, cmpB)), e: '先比整数部分，再比十分位、百分位：' + cmpA + ' 和 ' + cmpB + ' 中较大的是 ' + Math.max(cmpA, cmpB) + '。' });
+    /* 新增：填空 0.3 = ( ) 个 0.01 */
+    var cnt = U.pick([3, 5, 8, 12, 25]);
+    templates.push({ p: '0.' + (cnt % 10) + ' 里面有（ ）个 0.01', ans: cnt * 10, e: '0.' + (cnt % 10) + ' = 0.' + (cnt % 10) + '0，里面有 ' + (cnt * 10) + ' 个 0.01。' });
     var it = U.pick(templates);
-    return q({ topicId: 'g4b.u1.zero', level: 4, prompt: it.p, correct: it.ans, wrongs: three(it.ans, ['8.200', '0.500', '0.5', '8.02', '8.002', '30.07', '0.09', '600', '大小', '计数单位', '意义', '以上都对', it.ans + '0', it.ans + '00']), explain: it.e });
+    return q({ topicId: 'g4b.u1.zero', level: 4, prompt: it.p, correct: it.ans, wrongs: three(it.ans, ['8.200', '0.500', '0.5', '8.02', '8.002', '30.07', '0.09', '600', '大小', '计数单位', '意义', '以上都对', it.ans + '0', it.ans + '00', String(parseFloat(it.ans) * 10), String(parseFloat(it.ans) / 10)]), explain: it.e });
   });
 
   extend('g4b.u1.compare', function (level) {
@@ -1175,23 +1333,69 @@
   });
 
   extend('g4b.u1.calc', function (level) {
-    var a = U.randInt(500, 999), b = U.randInt(200, a - 100);
-    var whole = U.randInt(5, 10);
-    var c = U.randInt(100, 500);
-    var forms = [
-      { p: fmtCents(a) + ' − ' + fmtCents(b) + ' = （ ）', ans: a - b, e: '小数点对齐：' + fmtCents(a) + ' − ' + fmtCents(b) + ' = ' + fmtCents(a - b) + '。' },
-      { p: whole + ' − ' + fmtCents(c) + ' = （ ）', ans: whole * 100 - c, e: whole + ' = ' + fmtCents(whole * 100) + '，再减 ' + fmtCents(c) + ' = ' + fmtCents(whole * 100 - c) + '。' }
-    ];
-    var f = U.pick(forms);
-    return q({ topicId: 'g4b.u1.calc', level: 4, prompt: '神舟飞船轨道高度约 ' + fmtCents(a) + ' 万米，返回舱与轨道舱分离后下降了 ' + fmtCents(b) + ' 万米。现在高度是多少？', correct: fmtCents(f.ans), wrongs: three(fmtCents(f.ans), [f.ans + 1, f.ans - 1, f.ans + 10, f.ans - 10, f.ans + 100, f.ans - 100, f.ans + 2, f.ans * 10].map(function (x) { return fmtCents(x); })), explain: f.e });
+    var mode = U.pick(['subAB', 'subWhole', 'addCD', 'tri']);
+    if (mode === 'subAB') {
+      var a = U.randInt(500, 999), b = U.randInt(200, a - 100);
+      return q({
+        topicId: 'g4b.u1.calc', level: 4,
+        prompt: '神舟飞船轨道高度约 ' + fmtCents(a) + ' 万米，返回舱下降了 ' + fmtCents(b) + ' 万米，现在高度是多少？',
+        correct: fmtCents(a - b),
+        wrongs: three(fmtCents(a - b), [a - b + 1, a - b - 1, a - b + 10, a - b - 10, a - b + 100, a - b - 100, a - b + 2, (a - b) * 10].map(fmtCents)),
+        explain: '小数点对齐：' + fmtCents(a) + ' − ' + fmtCents(b) + ' = ' + fmtCents(a - b) + '。'
+      });
+    }
+    if (mode === 'subWhole') {
+      var whole = U.randInt(5, 10), c = U.randInt(100, 500);
+      return q({
+        topicId: 'g4b.u1.calc', level: 4,
+        prompt: who() + '带了 ' + whole + ' 元去文具店，买钢笔用去 ' + fmtCents(c) + ' 元，还剩多少元？',
+        correct: fmtCents(whole * 100 - c),
+        wrongs: three(fmtCents(whole * 100 - c), [whole * 100 - c + 1, whole * 100 - c - 1, whole * 100 - c + 10, whole * 100 - c - 10, whole * 100 - c + 100, whole * 100 - c + 2].map(fmtCents)),
+        explain: whole + ' 元 = ' + fmtCents(whole * 100) + '，再减 ' + fmtCents(c) + ' = ' + fmtCents(whole * 100 - c) + ' 元。'
+      });
+    }
+    if (mode === 'addCD') {
+      var d = U.randInt(100, 500), e2 = U.randInt(100, 500);
+      return q({
+        topicId: 'g4b.u1.calc', level: 4,
+        prompt: '妈妈买水果花了 ' + fmtCents(d) + ' 元，买菜花了 ' + fmtCents(e2) + ' 元，一共花了多少元？',
+        correct: fmtCents(d + e2),
+        wrongs: three(fmtCents(d + e2), [d + e2 + 1, d + e2 - 1, d + e2 + 10, d + e2 - 10, d + e2 + 100, d + e2 + 2].map(fmtCents)),
+        explain: '小数点对齐：' + fmtCents(d) + ' + ' + fmtCents(e2) + ' = ' + fmtCents(d + e2) + '。'
+      });
+    }
+    var p1 = U.randInt(100, 300), p2 = U.randInt(100, 300), p3 = U.randInt(100, 300);
+    return q({
+      topicId: 'g4b.u1.calc', level: 4,
+      prompt: '书店三本书的价格分别是 ' + fmtCents(p1) + ' 元、' + fmtCents(p2) + ' 元、' + fmtCents(p3) + ' 元，三本书一共多少元？',
+      correct: fmtCents(p1 + p2 + p3),
+      wrongs: three(fmtCents(p1 + p2 + p3), [p1 + p2 + p3 + 1, p1 + p2 + p3 - 1, p1 + p2 + p3 + 10, p1 + p2 + p3 - 10, p1 + p2 + p3 + 100, p1 + p2 + p3 + 2].map(fmtCents)),
+      explain: '小数点对齐相加：' + fmtCents(p1) + ' + ' + fmtCents(p2) + ' + ' + fmtCents(p3) + ' = ' + fmtCents(p1 + p2 + p3) + '。'
+    });
   });
 
   extend('g4b.u1.mix', function (level) {
-    var b = U.randInt(100, 300), c = U.randInt(100, 300);
-    var a = b + c + U.randInt(100, 500);
-    var d = U.randInt(50, 200);
-    var ans = a - b - c + d;
-    return q({ topicId: 'g4b.u1.mix', level: 4, prompt: '蚕丝厂上月生产蚕丝 ' + fmtCents(a) + ' 万米，本月上旬运出 ' + fmtCents(b) + ' 万米，中旬运出 ' + fmtCents(c) + ' 万米，下旬又生产了 ' + fmtCents(d) + ' 万米。现在库存多少万米？', correct: fmtCents(ans), wrongs: three(fmtCents(ans), [ans + 1, ans - 1, ans + 10, ans - 10, ans + 100, ans - 100, ans + 2, ans * 10].map(function (x) { return fmtCents(x); })), explain: '先算上月库存减上旬中旬：' + fmtCents(a) + ' − ' + fmtCents(b) + ' − ' + fmtCents(c) + ' = ' + fmtCents(a - b - c) + '，再加下旬生产的 ' + fmtCents(d) + ' = ' + fmtCents(ans) + '。' });
+    var mode = U.pick(['silk', 'water', 'bank', 'lib']);
+    if (mode === 'silk') {
+      var b = U.randInt(100, 300), c = U.randInt(100, 300);
+      var a = b + c + U.randInt(100, 500);
+      var d = U.randInt(50, 200);
+      var ans = a - b - c + d;
+      return q({ topicId: 'g4b.u1.mix', level: 4, prompt: '蚕丝厂上月生产蚕丝 ' + fmtCents(a) + ' 万米，上旬运出 ' + fmtCents(b) + ' 万米，中旬运出 ' + fmtCents(c) + ' 万米，下旬又生产 ' + fmtCents(d) + ' 万米，现在库存多少万米？', correct: fmtCents(ans), wrongs: three(fmtCents(ans), [ans + 1, ans - 1, ans + 10, ans - 10, ans + 100, ans - 100, ans + 2, ans * 10].map(fmtCents)), explain: '先算上月库存减上旬中旬：' + fmtCents(a) + ' − ' + fmtCents(b) + ' − ' + fmtCents(c) + ' = ' + fmtCents(a - b - c) + '，再加下旬生产的 ' + fmtCents(d) + ' = ' + fmtCents(ans) + '。' });
+    }
+    if (mode === 'water') {
+      var tank = U.randInt(500, 900), out1 = U.randInt(100, 300), out2 = U.randInt(100, 300), inw = U.randInt(50, 200);
+      var ans2 = tank - out1 - out2 + inw;
+      return q({ topicId: 'g4b.u1.mix', level: 4, prompt: '水池原有水 ' + fmtCents(tank) + ' 吨，上午放出 ' + fmtCents(out1) + ' 吨，下午放出 ' + fmtCents(out2) + ' 吨，傍晚又注入 ' + fmtCents(inw) + ' 吨，现在水池有水多少吨？', correct: fmtCents(ans2), wrongs: three(fmtCents(ans2), [ans2 + 1, ans2 - 1, ans2 + 10, ans2 - 10, ans2 + 100, ans2 + 2].map(fmtCents)), explain: tank + ' − ' + out1 + ' − ' + out2 + ' + ' + inw + ' = ' + ans2 + ' 吨。' });
+    }
+    if (mode === 'bank') {
+      var bal = U.randInt(500, 900), wd = U.randInt(100, 300), dep = U.randInt(100, 300);
+      var ans3 = bal - wd + dep;
+      return q({ topicId: 'g4b.u1.mix', level: 4, prompt: who() + '存折上原有 ' + fmtCents(bal) + ' 元，取出 ' + fmtCents(wd) + ' 元，又存入 ' + fmtCents(dep) + ' 元，现在存折上有多少元？', correct: fmtCents(ans3), wrongs: three(fmtCents(ans3), [ans3 + 1, ans3 - 1, ans3 + 10, ans3 - 10, ans3 + 100, ans3 + 2].map(fmtCents)), explain: bal + ' − ' + wd + ' + ' + dep + ' = ' + ans3 + ' 元。' });
+    }
+    var lib = U.randInt(500, 900), brw = U.randInt(100, 300), ret = U.randInt(50, 200), addB = U.randInt(100, 300);
+    var ans4 = lib - brw + ret + addB;
+    return q({ topicId: 'g4b.u1.mix', level: 4, prompt: '图书馆原有图书 ' + fmtCents(lib) + ' 万册，借出 ' + fmtCents(brw) + ' 万册，还回 ' + fmtCents(ret) + ' 万册，又新购 ' + fmtCents(addB) + ' 万册，现在图书馆有多少万册？', correct: fmtCents(ans4), wrongs: three(fmtCents(ans4), [ans4 + 1, ans4 - 1, ans4 + 10, ans4 - 10, ans4 + 100, ans4 + 2].map(fmtCents)), explain: lib + ' − ' + brw + ' + ' + ret + ' + ' + addB + ' = ' + ans4 + ' 万册。' });
   });
 
   /* ---------- U2 认识三角形和四边形 ---------- */
@@ -1202,22 +1406,61 @@
     var items = [
       { p: '一个三角形两个内角分别是 ' + small + '° 和 ' + small + '°，这个三角形按边分是（ ）三角形，按角分是（ ）三角形', ans: '等腰；锐角', e: '两个角相等 → 等腰三角形；第三个角 = 180° − ' + (2 * small) + '° = ' + (180 - 2 * small) + '° < 90° → 锐角三角形。' },
       { p: '一个三角形最大角是 ' + big + '°，这个三角形是（ ）三角形', ans: '钝角', e: '最大角 ' + big + '° > 90°，所以是钝角三角形。' },
-      { p: '等边三角形又是（ ）三角形', ans: '锐角', e: '等边三角形每个角 60°，都小于 90°，所以是锐角三角形。' }
+      { p: '等边三角形又是（ ）三角形', ans: '锐角', e: '等边三角形每个角 60°，都小于 90°，所以是锐角三角形。' },
+      { p: '一个直角三角形的一个锐角是 ' + small + '°，另一个锐角是（ ）°', ans: 90 - small, e: '直角三角形两个锐角和 = 90°，另一个锐角 = 90° − ' + small + '° = ' + (90 - small) + '°。' },
+      { p: '一个三角形三个内角都相等，它按边分是（ ）三角形', ans: '等边', e: '三个内角都相等 = 每个角 60°，是等边三角形，也是锐角三角形。' },
+      { p: '一个三角形两个角分别是 ' + U.randInt(30, 50) + '° 和 ' + U.randInt(30, 50) + '°，第三个角是 90°，这个三角形是（ ）三角形', ans: '直角', e: '有一个角是 90° 的三角形是直角三角形。' }
     ];
     var it = U.pick(items);
-    return q({ topicId: 'g4b.u2.classify', level: 4, prompt: it.p, correct: it.ans, wrongs: three(it.ans, ['等腰', '等边', '锐角', '直角', '钝角', '不等边', '等腰直角', '以上都不对']), explain: it.e });
+    var pool;
+    if (typeof it.ans === 'number') {
+      pool = [it.ans + 5, it.ans - 5, it.ans + 10, it.ans - 10, 90, 180 - small, small, it.ans + 1];
+    } else {
+      pool = ['等腰', '等边', '锐角', '直角', '钝角', '不等边', '等腰直角', '以上都不对'];
+    }
+    return q({ topicId: 'g4b.u2.classify', level: 4, prompt: it.p, correct: it.ans, wrongs: three(it.ans, pool), explain: it.e });
   });
 
   extend('g4b.u2.sum', function (level) {
-    var topAngle = U.randInt(40, 100);
-    var baseAngle = (180 - topAngle) / 2;
-    return q({ topicId: 'g4b.u2.sum', level: 4, prompt: '一个等腰三角形的顶角是 ' + topAngle + '°，它的一个底角是多少度？', correct: baseAngle, wrongs: three(baseAngle, [topAngle, 180 - baseAngle, baseAngle + 10, baseAngle - 10, 90 - baseAngle, baseAngle + 5, baseAngle - 5, 180 - topAngle]), explain: '等腰三角形两个底角相等，底角 = (180° − 顶角) ÷ 2 = (180° − ' + topAngle + '°) ÷ 2 = ' + baseAngle + '°。' });
+    var mode = U.pick(['top2base', 'base2top', 'right', 'third']);
+    if (mode === 'top2base') {
+      var topAngle = U.randInt(40, 100);
+      var baseAngle = (180 - topAngle) / 2;
+      return q({ topicId: 'g4b.u2.sum', level: 4, prompt: '一个等腰三角形的顶角是 ' + topAngle + '°，它的一个底角是多少度？', correct: baseAngle, wrongs: three(baseAngle, [topAngle, 180 - baseAngle, baseAngle + 10, baseAngle - 10, 90 - baseAngle, baseAngle + 5, baseAngle - 5, 180 - topAngle]), explain: '等腰三角形两个底角相等，底角 = (180° − 顶角) ÷ 2 = (180° − ' + topAngle + '°) ÷ 2 = ' + baseAngle + '°。' });
+    }
+    if (mode === 'base2top') {
+      var ba = U.randInt(50, 75);
+      var ta = 180 - 2 * ba;
+      return q({ topicId: 'g4b.u2.sum', level: 4, prompt: '一个等腰三角形的一个底角是 ' + ba + '°，它的顶角是多少度？', correct: ta, wrongs: three(ta, [ba, 180 - ba, ta + 10, ta - 10, 90 - ba, ta + 5, ta - 5, 180 - 2 * ba]), explain: '等腰三角形两个底角相等，顶角 = 180° − 2×底角 = 180° − 2×' + ba + '° = ' + ta + '°。' });
+    }
+    if (mode === 'right') {
+      var a = U.randInt(25, 65);
+      return q({ topicId: 'g4b.u2.sum', level: 4, prompt: '一个直角三角形，一个锐角是 ' + a + '°，另一个锐角是多少度？', correct: 90 - a, wrongs: three(90 - a, [a, 90 - a + 10, 90 - a - 10, 180 - a, 90, 90 - a + 5, 90 - a - 5, a + 90]), explain: '直角三角形两锐角和 = 90°，另一个锐角 = 90° − ' + a + '° = ' + (90 - a) + '°。' });
+    }
+    var x = U.randInt(40, 80), y = U.randInt(40, 80);
+    return q({ topicId: 'g4b.u2.sum', level: 4, prompt: '一个三角形两个内角分别是 ' + x + '° 和 ' + y + '°，第三个内角是多少度？', correct: 180 - x - y, wrongs: three(180 - x - y, [180 - x, 180 - y, x + y, 180 - x - y + 10, 180 - x - y - 10, 180 - x - y + 5, x, y, 90]), explain: '三角形内角和 = 180°，第三角 = 180° − ' + x + '° − ' + y + '° = ' + (180 - x - y) + '°。' });
   });
 
   extend('g4b.u2.side', function (level) {
-    var a = U.randInt(5, 12), b = U.randInt(5, 12);
-    var upper = a + b - 1;
-    return q({ topicId: 'g4b.u2.side', level: 4, prompt: '两根小棒分别长 ' + a + ' cm 和 ' + b + ' cm，第三根小棒取整厘米数，最长是（ ）cm 就能围成三角形？', correct: upper, wrongs: three(upper, [a + b, Math.abs(a - b), upper + 1, upper + 2, upper - 1, a * 2, b * 2, upper + 10]), explain: '三角形任意两边之和大于第三边。第三边 < ' + a + ' + ' + b + ' = ' + (a + b) + '，所以最长整厘米是 ' + upper + ' cm。' });
+    var mode = U.pick(['max', 'min', 'check', 'perim']);
+    if (mode === 'max') {
+      var a = U.randInt(5, 12), b = U.randInt(5, 12);
+      var upper = a + b - 1;
+      return q({ topicId: 'g4b.u2.side', level: 4, prompt: '两根小棒分别长 ' + a + ' cm 和 ' + b + ' cm，第三根取整厘米数，最长是（ ）cm 就能围成三角形？', correct: upper, wrongs: three(upper, [a + b, Math.abs(a - b), upper + 1, upper + 2, upper - 1, a * 2, b * 2, upper + 10]), explain: '三角形任意两边之和大于第三边。第三边 < ' + a + ' + ' + b + ' = ' + (a + b) + '，最长整厘米是 ' + upper + ' cm。' });
+    }
+    if (mode === 'min') {
+      var a2 = U.randInt(5, 12), b2 = U.randInt(5, 12);
+      var lower = Math.abs(a2 - b2) + 1;
+      return q({ topicId: 'g4b.u2.side', level: 4, prompt: '两根小棒分别长 ' + a2 + ' cm 和 ' + b2 + ' cm，第三根取整厘米数，最短是（ ）cm 就能围成三角形？', correct: lower, wrongs: three(lower, [Math.abs(a2 - b2), a2 + b2, lower + 1, lower - 1, lower + 2, a2, b2, lower + 10]), explain: '三角形任意两边之差小于第三边。第三边 > |' + a2 + ' − ' + b2 + '| = ' + Math.abs(a2 - b2) + '，最短整厘米是 ' + lower + ' cm。' });
+    }
+    if (mode === 'check') {
+      var s = U.pick([[3, 4, 5], [2, 3, 6], [4, 4, 4], [1, 2, 3], [5, 5, 9], [6, 7, 8]]);
+      var can = s[0] + s[1] > s[2] && s[0] + s[2] > s[1] && s[1] + s[2] > s[0];
+      return q({ topicId: 'g4b.u2.side', level: 4, prompt: '下面三组小棒（单位 cm）：' + s[0] + '、' + s[1] + '、' + s[2] + '，能否围成三角形？', correct: can ? '能围成' : '不能围成', wrongs: three(can ? '能围成' : '不能围成', ['能围成', '不能围成', '可能围成', '无法判断', '围成正方形', '围成长方形']), explain: '三角形任意两边之和要大于第三边。' + s[0] + '+' + s[1] + (can ? '>' : '<') + s[2] + '，所以' + (can ? '能' : '不能') + '围成。' });
+    }
+    var eqSide = U.randInt(5, 15), eqBase = U.randInt(4, 20);
+    var per = eqSide * 2 + eqBase;
+    return q({ topicId: 'g4b.u2.side', level: 4, prompt: '一个等腰三角形的周长是 ' + per + ' cm，腰长 ' + eqSide + ' cm，底边长多少 cm？', correct: eqBase, wrongs: three(eqBase, [eqSide, per - eqSide, eqBase + 1, eqBase - 1, eqBase + 5, eqSide * 2, per / 3, eqBase + 10]), explain: '等腰三角形周长 = 腰×2 + 底，底 = ' + per + ' − ' + eqSide + '×2 = ' + eqBase + ' cm。' });
   });
 
   extend('g4b.u2.quad', function (level) {
@@ -1265,22 +1508,65 @@
   /* ---------- U3 小数乘法 ---------- */
 
   extend('g4b.u3.int', function (level) {
-    var v = U.randInt(2, 9), n = U.randInt(3, 9);
-    return q({ topicId: 'g4b.u3.int', level: 4, prompt: '高铁每秒行驶 0.' + v + ' 千米，' + n + ' 秒行驶多少千米？', correct: fmtCents(v * n * 10), wrongs: three(fmtCents(v * n * 10), [fmtCents(v * n), fmtCents(v * n * 100), fmtCents(v * n * 10 + 10), fmtCents(v * n * 10 - 10), fmtCents(v * n * 20), fmtCents(v * n * 1000)]), explain: '0.' + v + ' × ' + n + ' = ' + (v * n) + ' 个 0.1 = ' + fmtCents(v * n * 10) + ' 千米。' });
+    var mode = U.pick(['speed', 'price', 'length', 'weight']);
+    if (mode === 'speed') {
+      var v = U.randInt(2, 9), n = U.randInt(3, 9);
+      return q({ topicId: 'g4b.u3.int', level: 4, prompt: '高铁每秒行驶 0.' + v + ' 千米，' + n + ' 秒行驶多少千米？', correct: fmtCents(v * n * 10), wrongs: three(fmtCents(v * n * 10), [fmtCents(v * n), fmtCents(v * n * 100), fmtCents(v * n * 10 + 10), fmtCents(v * n * 10 - 10), fmtCents(v * n * 20), fmtCents(v * n * 1000)]), explain: '0.' + v + ' × ' + n + ' = ' + (v * n) + ' 个 0.1 = ' + fmtCents(v * n * 10) + ' 千米。' });
+    }
+    if (mode === 'price') {
+      var price = U.randInt(2, 9), num = U.randInt(3, 9);
+      return q({ topicId: 'g4b.u3.int', level: 4, prompt: '水彩笔每支 0.' + price + ' 元，买 ' + num + ' 支需要多少元？', correct: fmtCents(price * num * 10), wrongs: three(fmtCents(price * num * 10), [fmtCents(price * num), fmtCents(price * num * 100), fmtCents(price * num * 10 + 10), fmtCents(price * num * 20), fmtCents(price * num * 1000), fmtCents(price * num + 5)]), explain: '0.' + price + ' × ' + num + ' = ' + (price * num) + ' 个 0.1 元 = ' + fmtCents(price * num * 10) + ' 元。' });
+    }
+    if (mode === 'length') {
+      var l = U.randInt(2, 9), m = U.randInt(3, 9);
+      return q({ topicId: 'g4b.u3.int', level: 4, prompt: '一根橡皮筋长 0.' + l + ' 米，' + m + ' 根接起来一共长多少米？', correct: fmtCents(l * m * 10), wrongs: three(fmtCents(l * m * 10), [fmtCents(l * m), fmtCents(l * m * 100), fmtCents(l * m * 10 + 10), fmtCents(l * m * 20), fmtCents(l * m * 1000), fmtCents(l * m + 5)]), explain: '0.' + l + ' × ' + m + ' = ' + (l * m) + ' 个 0.1 米 = ' + fmtCents(l * m * 10) + ' 米。' });
+    }
+    var w = U.randInt(2, 9), k = U.randInt(3, 9);
+    return q({ topicId: 'g4b.u3.int', level: 4, prompt: '一袋盐重 0.' + w + ' 千克，' + k + ' 袋盐一共重多少千克？', correct: fmtCents(w * k * 10), wrongs: three(fmtCents(w * k * 10), [fmtCents(w * k), fmtCents(w * k * 100), fmtCents(w * k * 10 + 10), fmtCents(w * k * 20), fmtCents(w * k * 1000), fmtCents(w * k + 5)]), explain: '0.' + w + ' × ' + k + ' = ' + (w * k) + ' 个 0.1 千克 = ' + fmtCents(w * k * 10) + ' 千克。' });
   });
 
   extend('g4b.u3.point', function (level) {
-    var cents = U.randInt(100, 999);
-    return q({ topicId: 'g4b.u3.point', level: 4, prompt: '把 ' + fmtCents(cents) + ' 的小数点向右移动两位，再向左移动一位，结果是（ ）', correct: fmtCents(cents * 10), wrongs: three(fmtCents(cents * 10), [fmtCents(cents), fmtCents(cents * 100), fmtCents(cents / 10), fmtCents(cents * 1000), fmtCents(cents / 100), fmtCents(cents * 100)]), explain: '小数点右移两位 = × 100 = ' + fmtCents(cents * 100) + '，再左移一位 = ÷ 10 = ' + fmtCents(cents * 10) + '。相当于原数 × 10。' });
+    var mode = U.pick(['r2l1', 'l2r3', 'r3mul', 'l1r2']);
+    if (mode === 'r2l1') {
+      var cents = U.randInt(100, 999);
+      return q({ topicId: 'g4b.u3.point', level: 4, prompt: '把 ' + fmtCents(cents) + ' 的小数点向右移动两位，再向左移动一位，结果是（ ）', correct: fmtCents(cents * 10), wrongs: three(fmtCents(cents * 10), [fmtCents(cents), fmtCents(cents * 100), fmtCents(cents / 10), fmtCents(cents * 1000), fmtCents(cents / 100), fmtCents(cents * 100)]), explain: '右移两位 = ×100，再左移一位 = ÷10，相当于 ×10 = ' + fmtCents(cents * 10) + '。' });
+    }
+    if (mode === 'l2r3') {
+      var c2 = U.randInt(100, 999);
+      return q({ topicId: 'g4b.u3.point', level: 4, prompt: '把 ' + fmtCents(c2) + ' 的小数点先向左移动两位，再向右移动三位，结果是（ ）', correct: fmtCents(c2 * 10), wrongs: three(fmtCents(c2 * 10), [fmtCents(c2), fmtCents(c2 * 100), fmtCents(c2 / 10), fmtCents(c2 * 1000), fmtCents(c2 / 100), fmtCents(c2 * 100)]), explain: '左移两位 = ÷100，再右移三位 = ×1000，相当于 ×10 = ' + fmtCents(c2 * 10) + '。' });
+    }
+    if (mode === 'r3mul') {
+      return q({ topicId: 'g4b.u3.point', level: 4, prompt: '把一个小数的小数点向右移动三位，这个数扩大到原数的（ ）倍', correct: 1000, wrongs: three(1000, [10, 100, 10000, 100000, 100, 2]), explain: '小数点向右移动一位扩大 10 倍，两位 100 倍，三位 1000 倍。' });
+    }
+    var c4 = U.randInt(100, 999);
+    return q({ topicId: 'g4b.u3.point', level: 4, prompt: '把 ' + fmtCents(c4) + ' 的小数点先向左移动一位，再向右移动两位，结果是（ ）', correct: fmtCents(c4 * 10), wrongs: three(fmtCents(c4 * 10), [fmtCents(c4), fmtCents(c4 * 100), fmtCents(c4 / 10), fmtCents(c4 * 1000), fmtCents(c4 / 100), fmtCents(c4 * 100)]), explain: '左移一位 = ÷10，再右移两位 = ×100，相当于 ×10 = ' + fmtCents(c4 * 10) + '。' });
   });
 
   extend('g4b.u3.dec', function (level) {
-    var aInt = U.randInt(1, 9), aDec = U.randInt(1, 9);
-    var bDec = U.randInt(1, 9);
-    var left = aInt * 10 + aDec;
-    var right = bDec;
-    var prod = left * right;
-    return q({ topicId: 'g4b.u3.dec', level: 4, prompt: '长方形花坛长 ' + aInt + '.' + aDec + ' 米，宽 0.' + bDec + ' 米，面积是多少平方米？', correct: fmtCents(prod), wrongs: three(fmtCents(prod), [fmtCents(prod / 10), fmtCents(prod * 10), fmtCents(prod + 10), fmtCents(prod - 10), fmtCents(prod * 100), fmt3(prod * 10)]), explain: aInt + '.' + aDec + ' × 0.' + bDec + '：' + left + ' × ' + right + ' = ' + prod + '，一位小数 × 一位小数 = 两位小数，即 ' + fmtCents(prod) + ' 平方米。' });
+    var mode = U.pick(['area', 'price', 'cloth', 'tile']);
+    if (mode === 'area') {
+      var aInt = U.randInt(1, 9), aDec = U.randInt(1, 9);
+      var bDec = U.randInt(1, 9);
+      var left = aInt * 10 + aDec;
+      var prod = left * bDec;
+      return q({ topicId: 'g4b.u3.dec', level: 4, prompt: '长方形花坛长 ' + aInt + '.' + aDec + ' 米，宽 0.' + bDec + ' 米，面积是多少平方米？', correct: fmtCents(prod), wrongs: three(fmtCents(prod), [fmtCents(prod / 10), fmtCents(prod * 10), fmtCents(prod + 10), fmtCents(prod - 10), fmtCents(prod * 100), fmt3(prod * 10)]), explain: aInt + '.' + aDec + ' × 0.' + bDec + '：' + left + ' × ' + bDec + ' = ' + prod + '，一位小数 × 一位小数 = 两位小数，即 ' + fmtCents(prod) + ' 平方米。' });
+    }
+    if (mode === 'price') {
+      var yuan = U.randInt(1, 9), jiao = U.randInt(1, 9);
+      var n = U.randInt(2, 9);
+      var c2 = yuan * 100 + jiao * 10;
+      return q({ topicId: 'g4b.u3.dec', level: 4, prompt: '苹果每千克 ' + yuan + '.' + jiao + ' 元，买 ' + n + ' 千克需要多少元？', correct: fmtCents(c2 * n), wrongs: three(fmtCents(c2 * n), [fmtCents(c2 * n / 10), fmtCents(c2 * n * 10), fmtCents(c2 * n + 10), fmtCents(c2 * n - 10), fmtCents(c2 * n * 100), fmt3(c2 * n * 10)]), explain: yuan + '.' + jiao + ' × ' + n + '：' + c2 + ' × ' + n + ' = ' + (c2 * n) + '，两位小数 = ' + fmtCents(c2 * n) + ' 元。' });
+    }
+    if (mode === 'cloth') {
+      var cm1 = U.randInt(1, 9), cm2 = U.randInt(1, 9);
+      var m = U.randInt(2, 9);
+      var c3 = cm1 * 10 + cm2;
+      return q({ topicId: 'g4b.u3.dec', level: 4, prompt: '一块布料宽 0.' + cm1 + cm2 + ' 米，长 ' + m + ' 米，这块布料的面积是多少平方米？', correct: fmtCents(c3 * m), wrongs: three(fmtCents(c3 * m), [fmtCents(c3 * m / 10), fmtCents(c3 * m * 10), fmtCents(c3 * m + 10), fmtCents(c3 * m - 10), fmtCents(c3 * m * 100), fmt3(c3 * m * 10)]), explain: '0.' + cm1 + cm2 + ' × ' + m + '：' + c3 + ' × ' + m + ' = ' + (c3 * m) + '，两位小数 = ' + fmtCents(c3 * m) + ' 平方米。' });
+    }
+    var t1 = U.randInt(1, 9), t2 = U.randInt(1, 9);
+    var k = U.randInt(2, 9);
+    var c4 = t1 * 10 + t2;
+    return q({ topicId: 'g4b.u3.dec', level: 4, prompt: '一块地砖边长 0.' + t1 + t2 + ' 米，' + k + ' 块地砖排成一行（不重叠），一共长多少米？', correct: fmtCents(c4 * k), wrongs: three(fmtCents(c4 * k), [fmtCents(c4 * k / 10), fmtCents(c4 * k * 10), fmtCents(c4 * k + 10), fmtCents(c4 * k - 10), fmtCents(c4 * k * 100), fmt3(c4 * k * 10)]), explain: '0.' + t1 + t2 + ' × ' + k + '：' + c4 + ' × ' + k + ' = ' + (c4 * k) + '，两位小数 = ' + fmtCents(c4 * k) + ' 米。' });
   });
 
   extend('g4b.u3.simplify', function (level) {
@@ -1292,10 +1578,12 @@
     /* 模板2：0.25 × 4 凑整 */
     var b2 = U.randInt(1, 9);
     templates.push({ p: '用简便方法计算：0.25 × 0.' + b2 + ' × 4 = （ ）', ans: '0.' + b2, e: '运用乘法交换律：0.25 × 4 × 0.' + b2 + ' = 1 × 0.' + b2 + ' = 0.' + b2 + '。' });
-    /* 模板3：(8+0.8)×1.25 */
-    templates.push({ p: '用简便方法计算：(8 + 0.8) × 1.25 = （ ）', ans: '11', e: '运用乘法分配律：8 × 1.25 + 0.8 × 1.25 = 10 + 1 = 11。' });
-    /* 模板4：0.89 × 4.8 + 0.89 × 5.2 */
-    templates.push({ p: who() + '用简便方法算：0.89 × 4.8 + 0.89 × 5.2 = （ ）', ans: '8.9', e: '运用乘法分配律：0.89 × (4.8 + 5.2) = 0.89 × 10 = 8.9。' });
+    /* 模板3：(8+0.8)×1.25 变形 */
+    var k3 = U.pick([4, 8, 2]);
+    templates.push({ p: '用简便方法计算：(' + k3 + ' + 0.' + k3 + ') × 1.25 = （ ）', ans: k3 * 1.25 + k3 * 0.125, e: '运用乘法分配律：' + k3 + '×1.25 + 0.' + k3 + '×1.25 = ' + (k3 * 1.25) + ' + ' + (k3 * 0.125) + ' = ' + (k3 * 1.25 + k3 * 0.125) + '。' });
+    /* 模板4：a×b + a×c 小数 */
+    var c4 = U.randInt(10, 99) / 100;
+    templates.push({ p: who() + '用简便方法算：' + c4 + ' × 4.8 + ' + c4 + ' × 5.2 = （ ）', ans: Math.round(c4 * 10 * 100) / 100, e: '运用乘法分配律：' + c4 + '×(4.8+5.2) = ' + c4 + '×10 = ' + (c4 * 10) + '。' });
     /* 模板5：0.5 × 2 凑整 */
     var b5 = U.randInt(1, 9);
     templates.push({ p: '巧算：0.5 × 0.' + b5 + ' × 2 = （ ）', ans: '0.' + b5, e: '运用乘法交换律：0.5 × 2 × 0.' + b5 + ' = 1 × 0.' + b5 + ' = 0.' + b5 + '。' });
@@ -1313,15 +1601,38 @@
   });
 
   extend('g4b.u4.count', function (level) {
-    var base = U.randInt(3, 5);
-    return q({ topicId: 'g4b.u4.count', level: 4, prompt: who() + '搭了一个立体图形：最底层有 ' + base + ' 个小正方体，上面一层比底层少 1 个，再上面一层又少 1 个。一共用了多少个小正方体？', correct: base + (base - 1) + (base - 2), wrongs: three(base + base - 1 + base - 2, [base, base * 3, base + 2, base + 1, base * 2, base * 3 + 1, base * 3 - 1]), explain: '分层数：底层 ' + base + ' 个，第二层 ' + (base - 1) + ' 个，第三层 ' + (base - 2) + ' 个，一共 ' + base + ' + ' + (base - 1) + ' + ' + (base - 2) + ' = ' + (base + base - 1 + base - 2) + ' 个。' });
+    var mode = U.pick(['three', 'two', 'tower']);
+    if (mode === 'three') {
+      var base = U.randInt(3, 8);
+      return q({ topicId: 'g4b.u4.count', level: 4, prompt: who() + '搭了一个立体图形：最底层有 ' + base + ' 个小正方体，上面一层比底层少 1 个，再上面一层又少 1 个。一共用了多少个小正方体？', correct: base + (base - 1) + (base - 2), wrongs: three(base + base - 1 + base - 2, [base, base * 3, base + 2, base + 1, base * 2, base * 3 + 1, base * 3 - 1]), explain: '分层数：底层 ' + base + ' 个，第二层 ' + (base - 1) + ' 个，第三层 ' + (base - 2) + ' 个，一共 ' + base + ' + ' + (base - 1) + ' + ' + (base - 2) + ' = ' + (base + base - 1 + base - 2) + ' 个。' });
+    }
+    if (mode === 'two') {
+      var b2 = U.randInt(4, 10);
+      var u2 = U.randInt(1, b2 - 1);
+      return q({ topicId: 'g4b.u4.count', level: 4, prompt: who() + '用小正方体搭两层：下层 ' + b2 + ' 个，上层 ' + u2 + ' 个，一共用了多少个？', correct: b2 + u2, wrongs: three(b2 + u2, [b2, u2, b2 * 2, u2 * 2, b2 + u2 + 1, b2 + u2 - 1, b2 - u2]), explain: '两层相加：' + b2 + ' + ' + u2 + ' = ' + (b2 + u2) + ' 个。' });
+    }
+    var b3 = U.randInt(4, 8), u3 = U.randInt(1, 3), u4 = U.randInt(1, u3);
+    return q({ topicId: 'g4b.u4.count', level: 4, prompt: who() + '搭三层小塔：最底层 ' + b3 + ' 个，中层 ' + u3 + ' 个，顶层 ' + u4 + ' 个，一共用了多少个？', correct: b3 + u3 + u4, wrongs: three(b3 + u3 + u4, [b3, u3, u4, b3 + u3, b3 + u4, b3 + u3 + u4 + 1, b3 + u3 + u4 - 1, b3 * 2]), explain: '三层相加：' + b3 + ' + ' + u3 + ' + ' + u4 + ' = ' + (b3 + u3 + u4) + ' 个。' });
   });
 
   /* ---------- U5 认识方程 ---------- */
 
   extend('g4b.u5.letter', function (level) {
-    var a = U.randInt(3, 12);
-    return q({ topicId: 'g4b.u5.letter', level: 4, prompt: '当 a = ' + a + ' 时，正方形的周长 C = 4a = （ ）厘米，面积 S = a² = （ ）平方厘米', correct: '周长 ' + (4 * a) + '，面积 ' + (a * a), wrongs: three('周长 ' + (4 * a) + '，面积 ' + (a * a), ['周长 ' + (4 * a) + '，面积 ' + (2 * a), '周长 ' + (2 * a) + '，面积 ' + (a * a), '周长 ' + (4 * a) + '，面积 ' + (a * a * a), '周长 ' + (4 * a + 2) + '，面积 ' + (a * a)]), explain: '当 a = ' + a + ' 时，C = 4 × ' + a + ' = ' + (4 * a) + ' 厘米，S = ' + a + ' × ' + a + ' = ' + (a * a) + ' 平方厘米。' });
+    var mode = U.pick(['square', 'rect', 'travel', 'age']);
+    if (mode === 'square') {
+      var a = U.randInt(3, 25);
+      return q({ topicId: 'g4b.u5.letter', level: 4, prompt: '当 a = ' + a + ' 时，正方形的周长 C = 4a = （ ）厘米，面积 S = a² = （ ）平方厘米', correct: '周长 ' + (4 * a) + '，面积 ' + (a * a), wrongs: three('周长 ' + (4 * a) + '，面积 ' + (a * a), ['周长 ' + (4 * a) + '，面积 ' + (2 * a), '周长 ' + (2 * a) + '，面积 ' + (a * a), '周长 ' + (4 * a) + '，面积 ' + (a * a * a), '周长 ' + (4 * a + 2) + '，面积 ' + (a * a)]), explain: '当 a = ' + a + ' 时，C = 4 × ' + a + ' = ' + (4 * a) + ' 厘米，S = ' + a + ' × ' + a + ' = ' + (a * a) + ' 平方厘米。' });
+    }
+    if (mode === 'rect') {
+      var rl = U.randInt(3, 20), rw = U.randInt(2, rl - 1);
+      return q({ topicId: 'g4b.u5.letter', level: 4, prompt: '一个长方形长 a = ' + rl + ' 米，宽 b = ' + rw + ' 米，它的周长 C = 2(a+b) = （ ）米', correct: 2 * (rl + rw), wrongs: three(2 * (rl + rw), [rl + rw, 2 * rl + rw, rl + 2 * rw, 2 * (rl + rw) + 1, 2 * (rl + rw) - 1, rl * rw]), explain: '长方形周长 = 2(长+宽) = 2(' + rl + '+' + rw + ') = ' + (2 * (rl + rw)) + ' 米。' });
+    }
+    if (mode === 'travel') {
+      var v = U.randInt(40, 90), t = U.randInt(2, 8);
+      return q({ topicId: 'g4b.u5.letter', level: 4, prompt: '一辆车每小时行 v = ' + v + ' 千米，行了 t = ' + t + ' 小时，路程 s = vt = （ ）千米', correct: v * t, wrongs: three(v * t, [v + t, v - t, v * t + 10, v * t - 10, v * t + 1, v / t]), explain: '路程 = 速度 × 时间 = ' + v + ' × ' + t + ' = ' + (v * t) + ' 千米。' });
+    }
+    var age = U.randInt(8, 15);
+    return q({ topicId: 'g4b.u5.letter', level: 4, prompt: '小红今年 a = ' + age + ' 岁，爸爸比小红大 28 岁，爸爸今年 b = a + 28 = （ ）岁', correct: age + 28, wrongs: three(age + 28, [age - 28, age + 27, age + 29, age + 28 + 1, age + 28 - 1, 28 - age, age * 2]), explain: '爸爸 = 小红 + 28 = ' + age + ' + 28 = ' + (age + 28) + ' 岁。' });
   });
 
   extend('g4b.u5.relation', function (level) {
@@ -1356,8 +1667,9 @@
       { p: '下面哪个不是方程？（ ）', ans: '6 + 3 = 9', e: '6 + 3 = 9 是等式但不含未知数，所以不是方程。' }
     ];
     templates.push(U.pick(isEqItems));
-    /* 模板2：数有几个方程 */
-    templates.push({ p: '下面各式中，有（ ）个方程：① 3x + 5 = 20 ② 18 − 2x ③ 24 = 12 × 2 ④ 5y = 40 ⑤ x − 8 > 6', ans: '2 个', e: '① 3x + 5 = 20 是方程；② 18 − 2x 不是等式；③ 24 = 12 × 2 是等式但不含未知数；④ 5y = 40 是方程；⑤ x − 8 > 6 是不等式。共 2 个方程。' });
+    /* 模板2：数有几个方程（随机化各项） */
+    var n1 = U.randInt(3, 20), n2 = U.randInt(5, 30), n3 = U.randInt(10, 50);
+    templates.push({ p: '下面各式中，有（ ）个方程：① ' + n1 + 'x + 5 = ' + (n1 * 3 + 5) + ' ② 18 − 2x ③ ' + n2 + ' = 12 × ' + Math.floor(n2 / 12) + ' ④ 5y = ' + (5 * n3) + ' ⑤ x − 8 > 6', ans: '2 个', e: '①是方程；②不是等式；③是等式但不含未知数；④是方程；⑤是不等式。共 2 个方程。' });
     /* 模板3：方程定义填空 */
     templates.push({ p: who() + '说：含有未知数的（ ）叫方程', ans: '等式', e: '含有未知数的等式叫方程。' });
     /* 模板4：判断对错 */
@@ -1394,8 +1706,21 @@
   });
 
   extend('g4b.u5.solve2', function (level) {
-    var x = U.randInt(3, 20), k = U.randInt(3, 9);
-    return q({ topicId: 'g4b.u5.solve2', level: 4, prompt: '解方程：' + k + 'y = ' + (x * k) + '，y = （ ）', correct: String(x), wrongs: three(String(x), [String(x + 1), String(x - 1), String(x * 2), String(x + 10), String(x - 10), String(k)]), explain: '等式两边同时除以 ' + k + '：' + k + 'y ÷ ' + k + ' = ' + (x * k) + ' ÷ ' + k + '，y = ' + x + '。' });
+    var mode = U.pick(['mul', 'div', 'add', 'sub']);
+    if (mode === 'mul') {
+      var x = U.randInt(3, 20), k = U.randInt(3, 9);
+      return q({ topicId: 'g4b.u5.solve2', level: 4, prompt: '解方程：' + k + 'y = ' + (x * k) + '，y = （ ）', correct: String(x), wrongs: three(String(x), [String(x + 1), String(x - 1), String(x * 2), String(x + 10), String(x - 10), String(k)]), explain: '两边同时除以 ' + k + '：y = ' + (x * k) + ' ÷ ' + k + ' = ' + x + '。' });
+    }
+    if (mode === 'div') {
+      var x2 = U.randInt(5, 30), k2 = U.randInt(2, 9);
+      return q({ topicId: 'g4b.u5.solve2', level: 4, prompt: '解方程：y ÷ ' + k2 + ' = ' + x2 + '，y = （ ）', correct: String(x2 * k2), wrongs: three(String(x2 * k2), [String(x2 * k2 + 1), String(x2 * k2 - 1), String(x2 * k2 * 2), String(x2 + k2), String(x2 * k2 + 10), String(x2)]), explain: '两边同时乘 ' + k2 + '：y = ' + x2 + ' × ' + k2 + ' = ' + (x2 * k2) + '。' });
+    }
+    if (mode === 'add') {
+      var x3 = U.randInt(5, 30), k3 = U.randInt(2, 6), b3 = U.randInt(3, 20);
+      return q({ topicId: 'g4b.u5.solve2', level: 4, prompt: '解方程：' + k3 + 'y + ' + b3 + ' = ' + (k3 * x3 + b3) + '，y = （ ）', correct: String(x3), wrongs: three(String(x3), [String(x3 + 1), String(x3 - 1), String(x3 * 2), String(x3 + 10), String(x3 - 10), String(k3), String(b3)]), explain: '先两边减 ' + b3 + '：' + k3 + 'y = ' + (k3 * x3) + '，再除以 ' + k3 + '：y = ' + x3 + '。' });
+    }
+    var x4 = U.randInt(10, 30), k4 = U.randInt(2, 6), b4 = U.randInt(3, 15);
+    return q({ topicId: 'g4b.u5.solve2', level: 4, prompt: '解方程：' + k4 + 'y − ' + b4 + ' = ' + (k4 * x4 - b4) + '，y = （ ）', correct: String(x4), wrongs: three(String(x4), [String(x4 + 1), String(x4 - 1), String(x4 * 2), String(x4 + 10), String(x4 - 10), String(k4), String(b4)]), explain: '先两边加 ' + b4 + '：' + k4 + 'y = ' + (k4 * x4) + '，再除以 ' + k4 + '：y = ' + x4 + '。' });
   });
 
   extend('g4b.u5.word', function (level) {
@@ -1422,20 +1747,23 @@
   });
 
   extend('g4b.u5.tess', function (level) {
-    /* 多样性：5 个模板 × 随机问法 */
+    /* 多样性：10 个模板 × 随机问法 */
     var templates = [];
-    /* 模板1：哪个能密铺 */
     templates.push({ p: who() + '问：下面哪种图形可以密铺？（ ）', ans: '三角形', e: '三角形可以密铺。任意三角形内角和 180°，6 个同样的三角形在一点处拼成 360°。' });
-    /* 模板2：哪个能密铺（四边形） */
     templates.push({ p: '下面哪种图形可以密铺？（ ）', ans: '四边形', e: '四边形可以密铺。任意四边形内角和 360°，4 个同样的四边形在一点处拼成 360°。' });
-    /* 模板3：哪个不能密铺 */
     templates.push({ p: who() + '说：下面哪种图形不能密铺？（ ）', ans: '正五边形', e: '正五边形每个内角 108°，3 × 108° = 324° ≠ 360°，不能密铺。' });
-    /* 模板4：密铺定义 */
     templates.push({ p: '图形之间没有空隙、不重叠地铺在平面上，叫做（ ）', ans: '密铺', e: '图形之间没有空隙，也不重叠，就是密铺。' });
-    /* 模板5：正六边形密铺 */
     templates.push({ p: who() + '发现蜂巢是正六边形排列，因为正六边形（ ）', ans: '可以密铺', e: '正六边形每个内角 120°，3 × 120° = 360°，可以密铺。' });
+    templates.push({ p: '下面哪种图形既可以密铺，又是特殊的长方形？（ ）', ans: '正方形', e: '正方形每个角 90°，4 × 90° = 360°，可以密铺。' });
+    templates.push({ p: '圆不能密铺，因为圆与圆之间会留下（ ）', ans: '空隙', e: '圆是曲线图形，铺在平面上圆与圆之间有空隙，不能密铺。' });
+    templates.push({ p: who() + '家用地砖铺地，下面哪种形状的地砖最常见？（ ）', ans: '正方形', e: '正方形地砖角 90°，4 块拼成 360°，可以密铺，最常见。' });
+    /* 随机数：正多边形密铺判断 */
+    var sides = U.pick([3, 4, 5, 6, 8]);
+    var canTess = (sides === 3 || sides === 4 || sides === 6);
+    templates.push({ p: who() + '研究：正' + sides + '边形每个内角 ' + (Math.round((sides - 2) * 180 / sides)) + '°，它（ ）密铺', ans: canTess ? '可以' : '不能', e: '正' + sides + '边形每个内角 ' + Math.round((sides - 2) * 180 / sides) + '°，360° ÷ ' + Math.round((sides - 2) * 180 / sides) + (canTess ? ' = 整数，可以密铺。' : ' ≠ 整数，不能密铺。') });
+    templates.push({ p: '下面哪种图形和三角形一样，可以单独密铺？（ ）', ans: '任意四边形', e: '任意四边形内角和 360°，4 个拼在一点正好 360°，可以密铺。' });
     var it = U.pick(templates);
-    return q({ topicId: 'g4b.u5.tess', level: 4, prompt: it.p, correct: it.ans, wrongs: three(it.ans, ['三角形', '四边形', '正五边形', '正六边形', '正三角形', '长方形', '圆', '密铺', '可以密铺', '不能密铺', '有重叠']), explain: it.e });
+    return q({ topicId: 'g4b.u5.tess', level: 4, prompt: it.p, correct: it.ans, wrongs: three(it.ans, ['三角形', '四边形', '正五边形', '正六边形', '正三角形', '长方形', '圆', '密铺', '可以密铺', '不能密铺', '有重叠', '空隙', '可以', '不能', '任意四边形']), explain: it.e });
   });
 
   /* ---------- U6 数据的表示和分析 ---------- */
@@ -1449,15 +1777,16 @@
   });
 
   extend('g4b.u6.line', function (level) {
-    /* 多样性：3 种数据情境 × 3 种问法 = 9 种组合 */
+    /* 多样性：5 种数据情境 × 3 种问法 */
     var scenarios = [
       { cats: ['第2天', '第4天', '第6天', '第8天', '第10天', '第12天'], vals: [1, 3, 7, 10, 14, 15], unit: '厘米', title: '蒜苗生长' },
       { cats: ['2015', '2016', '2017', '2018', '2019', '2020', '2021'], vals: [19, 22, 25, 29, 35, 38, 40], unit: '万千米', title: '高铁营业里程' },
-      { cats: ['周一', '周二', '周三', '周四', '周五'], vals: [12, 18, 15, 25, 30], unit: '个', title: '每天读书页数' }
+      { cats: ['周一', '周二', '周三', '周四', '周五'], vals: [12, 18, 15, 25, 30], unit: '个', title: '每天读书页数' },
+      { cats: ['1月', '2月', '3月', '4月', '5月'], vals: [5, 8, 12, 10, 15], unit: '℃', title: '月平均气温' },
+      { cats: ['第1天', '第2天', '第3天', '第4天', '第5天'], vals: [20, 35, 30, 50, 65], unit: '页', title: '读书页数' }
     ];
     var sc = U.pick(scenarios);
     var vals = sc.vals, cats = sc.cats;
-    /* 计算每段增长量 */
     var diffs = [];
     for (var i = 1; i < vals.length; i++) diffs.push(vals[i] - vals[i - 1]);
     var maxDiffIdx = 0;
@@ -1475,6 +1804,11 @@
       function () {
         var ans = cats[maxDiffIdx] + ' 到 ' + cats[maxDiffIdx + 1];
         return { p: who() + '看' + sc.title + '折线统计图，哪一段时间增长最快？', ans: ans, e: '折线越陡增长越快。从' + cats[maxDiffIdx] + '到' + cats[maxDiffIdx + 1] + '，增长了 ' + diffs[maxDiffIdx] + ' ' + sc.unit + '，是增长最快的一段。' };
+      },
+      function () {
+        var min = Math.min.apply(null, vals);
+        var minCat = cats[vals.indexOf(min)];
+        return { p: '根据' + sc.title + '折线统计图，最低值出现在什么时候？', ans: minCat, e: '折线最低点在' + minCat + '，值为 ' + min + ' ' + sc.unit + '。' };
       }
     ];
     var f = U.pick(qTypes)();
@@ -1482,7 +1816,7 @@
     if (typeof f.ans === 'number') {
       pool = [f.ans + 1, f.ans - 1, f.ans + 2, f.ans - 2, Math.max.apply(null, vals) + 1, Math.min.apply(null, vals) - 1, f.ans * 2, f.ans + 5];
     } else {
-      pool = ['整体呈下降趋势', '保持不变', '先升后降', '先降后升', cats[0] + ' 到 ' + cats[1], '整体呈上升趋势', '无法判断'];
+      pool = ['整体呈下降趋势', '保持不变', '先升后降', '先降后升', cats[0] + ' 到 ' + cats[1], '整体呈上升趋势', '无法判断'].concat(cats);
     }
     return q({ topicId: 'g4b.u6.line', level: 4, prompt: f.p, correct: f.ans, wrongs: three(f.ans, pool), canvas: { kind: 'line-chart', categories: cats, values: vals, unit: sc.unit }, explain: f.e });
   });
